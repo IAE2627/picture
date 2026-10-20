@@ -38,10 +38,13 @@ const PRODUCT = {
   priceRef: 195, // arrondi utilisé dans tous les calculs du dossier
   priceRetailNow: { label: "Prix constaté chez Snowleader (oct. 2026)", value: 126.9, isEstimated: false, sourceUrl: SRC.snowleader },
   colors: [
-    { id: "tobacco", name: "Tobacco", hex: "#8A5A2B", verified: true, sourceUrl: SRC.snowleader },
-    { id: "ashrose", name: "Ash Rose (femme)", hex: "#C3A09A", verified: true, sourceUrl: SRC.snowleaderW },
-    { id: "black", name: "Black", hex: "#232526", verified: false },
-    { id: "darkblue", name: "Dark Blue", hex: "#24344C", verified: false },
+    { id: "black", name: "Noir", hex: "#232526", hex2: "#3a3d3f", img: JACKET_IMG },
+    { id: "c0", name: "Blanc / kaki / menthe", hex: "#ebe8e5", hex2: "#6fd1b9", img: "__COL_0__" },
+    { id: "c1", name: "Kaki / noir / sable", hex: "#6b6a2c", hex2: "#f0e3c8", img: "__COL_1__" },
+    { id: "c2", name: "Sable / noir", hex: "#ddd5c9", hex2: "#2b2b2b", img: "__COL_2__" },
+    { id: "c3", name: "Noir / magenta / sable", hex: "#2a2b2d", hex2: "#c5309f", img: "__COL_3__" },
+    { id: "c4", name: "Marron / sable / lilas", hex: "#8a6a48", hex2: "#d9b5f0", img: "__COL_4__" },
+    { id: "c5", name: "Sable / gris / bleu", hex: "#d8d4c8", hex2: "#7f9ccc", img: "__COL_5__" },
   ],
   specs: [
     { k: "Construction", v: "2,5 couches, coutures entièrement étanchées", src: SRC.snowleader },

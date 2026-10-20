@@ -130,9 +130,10 @@ const Panel = ({ className = "", children }) => <div className={"panel " + class
 // =========================================================
 // Onglet 1 — Présentation
 // =========================================================
-function JacketViewer({ color, tint }) {
+function JacketViewer({ img }) {
   const mount = useRef(null);
   const uni = useRef(null);
+  const texRef = useRef(null);
   const [spots, setSpots] = useState([]);
   const [active, setActive] = useState(null);
   const [err, setErr] = useState(false);
@@ -155,10 +156,12 @@ function JacketViewer({ color, tint }) {
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) { const x = pos.getX(i) / (W / 2); pos.setZ(i, -BEND * x * x); }
     geo.computeVertexNormals();
-    const tex = new T.TextureLoader().load(JACKET_IMG);
-    tex.anisotropy = 8; if (T.sRGBEncoding) tex.encoding = T.sRGBEncoding;
-    const u = { map: { value: tex }, uColor: { value: new T.Color(color) }, uTint: { value: tint ? 1 : 0 }, uLight: { value: 0 } };
-    uni.current = u;
+    const loader = new T.TextureLoader();
+    const cache = {};
+    const getTex = (src) => { if (!cache[src]) { const tx = loader.load(src); tx.anisotropy = 8; if (T.sRGBEncoding) tx.encoding = T.sRGBEncoding; cache[src] = tx; } return cache[src]; };
+    PRODUCT.colors.forEach((c) => getTex(c.img));
+    const u = { map: { value: getTex(img) }, uColor: { value: new T.Color(0xffffff) }, uTint: { value: 0 }, uLight: { value: 0 } };
+    uni.current = u; texRef.current = getTex;
     const mat = new T.ShaderMaterial({
       uniforms: u, transparent: true, side: T.DoubleSide,
       vertexShader: "varying vec2 vUv; varying vec3 vN; void main(){ vUv=uv; vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
@@ -217,9 +220,9 @@ function JacketViewer({ color, tint }) {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); controls && controls.dispose(); renderer.dispose(); el.innerHTML = ""; };
   }, []);
 
-  useEffect(() => { if (uni.current) { uni.current.uColor.value.set(color); uni.current.uTint.value = tint ? 1 : 0; } }, [color, tint]);
+  useEffect(() => { if (uni.current && texRef.current) uni.current.map.value = texRef.current(img); }, [img]);
 
-  if (err) return <div className="viewer grid place-items-center p-4"><img src={JACKET_IMG} alt="Veste Abstral 2.5L" className="max-h-full" /></div>;
+  if (err) return <div className="viewer grid place-items-center p-4"><img src={img} alt="Veste Abstral 2.5L" className="max-h-full" /></div>;
   return (
     <div className="viewer">
       <div ref={mount} className="absolute inset-0" />
@@ -245,16 +248,16 @@ function TabPresentation() {
     <div className="flex flex-col gap-10">
       <div className="grid lg:grid-cols-[1.15fr_1fr] gap-6 items-start">
         <Panel className="p-0 overflow-hidden">
-          <JacketViewer color={col.hex} tint={col.id !== "black"} />
+          <JacketViewer img={col.img} />
           <div className="p-4 flex flex-wrap items-center gap-3 border-t border-line">
             <span className="label m-0">Coloris</span>
             {PRODUCT.colors.map((c) => (
               <button key={c.id} type="button" onClick={() => setCol(c)} className={"swatch" + (col.id === c.id ? " is-on" : "")} aria-pressed={col.id === c.id}>
-                <span className="chip" style={{ background: c.hex }} />{c.name}
+                <span className="chip" style={{ background: `linear-gradient(135deg, ${c.hex} 55%, ${c.hex2} 55%)` }} />{c.name}
               </button>
             ))}
             <span className="text-xs text-muted w-full">
-              {col.verified ? <>Coloris vérifié : <Src href={col.sourceUrl}>fiche revendeur</Src></> : col.id === "black" ? "Photo produit, coloris Black. Les autres coloris sont une teinte simulée sur cette photo." : "Teinte simulée sur la photo Black, coloris à confirmer sur le site Picture."}
+              {PRODUCT.colors.length} coloris, photos produit du site Picture. Coloris affiché : {col.name}.
             </span>
           </div>
         </Panel>
