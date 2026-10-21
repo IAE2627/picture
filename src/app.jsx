@@ -1289,6 +1289,12 @@ function App() {
         <div className="wrap py-7 md:py-9 flex flex-col gap-3">
           <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">{MAST[tab].title}</h1>
           <p className="market-intro">{MAST[tab].body}</p>
+          {tab === "presentation" && (
+            <div className="problem-box">
+              <div className="eyebrow">Problématique</div>
+              <p className="font-display text-lg md:text-xl font-semibold leading-snug text-balance">Est-il pertinent d'appliquer une politique promotionnelle à l'approche du pic saisonnier hivernal pour la veste Abstral 2.5L, et quel surcroît de volume de ventes est requis pour compenser la baisse de marge unitaire ?</p>
+            </div>
+          )}
         </div>
       </header>
       <nav className="tabs" aria-label="Onglets">

@@ -194,3 +194,4 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .market-intro { max-width: 62rem; font-size: clamp(.98rem, 1.6vw, 1.1rem); line-height: 1.6; border-left: 3px solid var(--ocre); padding-left: 14px; color: var(--mast-ink); }
 .masthead .src-link { text-decoration-color: color-mix(in srgb, var(--mast-ink) 60%, transparent); }
 .data-table tr.row-us td { background: color-mix(in srgb, var(--bad) 7%, transparent); }
+.problem-box { margin-top: 10px; max-width: 62rem; background: color-mix(in srgb, var(--ocre) 18%, transparent); border: 1px solid color-mix(in srgb, var(--ocre) 55%, transparent); border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; color: var(--mast-ink); }
