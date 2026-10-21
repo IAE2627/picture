@@ -463,12 +463,12 @@ function RingMap({ onPick }) {
   return (
     <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6 items-center">
       <div className="relative max-w-[600px] w-full mx-auto">
-        <svg viewBox="-10 -6 620 636" className="w-full h-auto" role="img" aria-label="Cercles concurrentiels autour de l'Abstral">
+        <svg viewBox="-10 -6 620 636" className="w-full h-auto" role="img" aria-label="Cercles concurrentiels autour de l'Abstral, notre produit">
           <circle cx={C} cy={C} r={R3} fill="none" stroke={t.muted} strokeWidth="2" strokeDasharray="7 7" opacity={dim("oublie")} />
           <circle cx={C} cy={C} r={R2} fill={t.ocre} fillOpacity="0.07" stroke={t.ocre} strokeWidth="2.5" opacity={dim("indirect")} />
           <circle cx={C} cy={C} r={R1} fill={t.forest} fillOpacity="0.07" stroke={t.forest} strokeWidth="2.5" opacity={dim("direct")} />
           <circle cx={C} cy={C} r={R0} fill={t.surface} stroke={t.forest} strokeWidth="2.5" />
-          <text x={C} y={C - 16} textAnchor="middle" fontSize="15" fontWeight="700" fill={t.ink}>Votre offre</text>
+          <text x={C} y={C - 16} textAnchor="middle" fontSize="15" fontWeight="700" fill={t.ink}>Notre produit</text>
           <text x={C} y={C + 4} textAnchor="middle" fontSize="13" fill={t.ink}>Abstral 2.5L</text>
           <text x={C} y={C + 24} textAnchor="middle" fontSize="14" fontWeight="700" fill={t.ocre}>195 €</text>
           {placed.map((b) => (
@@ -511,6 +511,13 @@ function RingMap({ onPick }) {
   );
 }
 
+function Rich({ v }) {
+  if (!Array.isArray(v)) return <p>{v}</p>;
+  return <div className="flex flex-col gap-2">{v.map((x, i) => Array.isArray(x)
+    ? <p key={i}><strong>{x[0]}</strong> {x[1]}</p>
+    : <p key={i}>{x}</p>)}</div>;
+}
+
 function FinRow({ r }) {
   return (
     <div className="fin-row"><span>{r.label}</span><span className="tabular-nums font-medium">{r.src ? <Src href={r.src}>{r.value}</Src> : <span title="Lien source à ajouter">{r.value}<sup className="text-warn"> *</sup></span>}</span></div>
@@ -550,9 +557,9 @@ function Drawer({ b, onClose }) {
         </div>
         {b.note && <p className="callout mt-4 text-sm">{b.note}</p>}
         <div className="mt-5 grid gap-4 text-sm">
-          <div><div className="label">Tarifs</div><p>{b.tarifs}</p></div>
-          <div><div className="label">Stratégie</div><p>{b.strategy}</p></div>
-          <div><div className="label">Investissements</div><p>{b.invest}</p></div>
+          <div><div className="label">Tarifs</div><Rich v={b.tarifs} /></div>
+          <div><div className="label">Stratégie</div><Rich v={b.strategy} /></div>
+          <div><div className="label">Investissements</div><Rich v={b.invest} /></div>
         </div>
         <div className="mt-6">
           <div className="eyebrow">Synthèse financière</div>
@@ -567,6 +574,7 @@ function Drawer({ b, onClose }) {
               {b.fin.cr.concat(b.fin.bilan).some((r) => !r.src) && <p className="text-xs text-muted mt-1">* Chiffre repris du dossier, lien vers les comptes à compléter.</p>}
             </>
           ) : (
+            b.finText ? <div className="text-sm mt-2"><Rich v={b.finText} /><p className="text-xs text-muted mt-2">{b.finMissing}</p></div> :
             <p className="text-sm text-muted mt-2">{b.finMissing}{b.finLinks && <> · {b.finLinks.map((l) => <Src key={l.src} href={l.src}>{l.label}</Src>)}</>}</p>
           )}
         </div>

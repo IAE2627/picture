@@ -113,7 +113,7 @@ code, .formula { font-family: var(--f-mono); }
 .pill.is-on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .ring-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; vertical-align: middle; }
 .ring-all { background: conic-gradient(var(--forest) 0 33%, var(--slate) 0 66%, var(--sage) 0); }
-.ring-direct, .ring-bg-direct { background: var(--forest); } .ring-indirect, .ring-bg-indirect { background: var(--slate); } .ring-oublie, .ring-bg-oublie { background: var(--sage); } .ring-nous { background: var(--ocre); }
+.ring-direct, .ring-bg-direct { background: var(--forest); } .ring-indirect, .ring-bg-indirect { background: var(--ocre); } .ring-oublie, .ring-bg-oublie { background: var(--slate); } .ring-nous { background: var(--ocre); }
 .bubble { cursor: pointer; outline: none; }
 .bubble:hover circle, .bubble:focus circle { stroke: var(--ink); stroke-width: 2.5; }
 .map-tip { position: absolute; top: 12px; right: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; box-shadow: 0 8px 24px rgba(0,0,0,.12); pointer-events: none; min-width: 180px; }
