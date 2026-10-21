@@ -1216,6 +1216,15 @@ const TABS = [
   { id: "synthese", label: "Synthèse", icon: L.Flag },
 ];
 
+const MAST = {
+  presentation: { title: "Le marché", body: "Le marché mondial de l'outdoor technique regroupe l'ensemble des vêtements, chaussures et équipements conçus pour les activités de plein air et de montagne (randonnée, ski, snowboard, trail, escalade), dont les vestes techniques imperméables et respirantes constituent l'un des segments clés. Picture Organic Clothing s'y positionne sur le créneau des vêtements de glisse et de montagne éco-conçus, en milieu et haut de gamme." },
+  concurrence: { title: "La concurrence", body: <>Ce marché est <Src href="https://www.businessresearchinsights.com/fr/market-reports/outdoor-apparel-and-equipment-market-125148">en croissance soutenue depuis la pandémie de 2020</Src>. Il est très concurrentiel : Picture y affronte à la fois des concurrents directs, proposant eux aussi des vêtements de glisse et de montagne éco-conçus, et des concurrents plus indirects, comme les grandes marques généralistes de l'outdoor, dont certaines sont développées et installées depuis des décennies.</> },
+  couts: { title: "Les coûts", body: "Afin de déterminer la marge dont Picture dispose ainsi que la limite de rentabilité d'une promotion, une estimation du coût de revient de la veste Abstral a été réalisée." },
+  prix: { title: "Prix et promotion", body: "À l'approche de l'hiver, saison clé pour les vêtements de glisse et de montagne, nous nous sommes demandé quels prix et quelles offres promotionnelles pourraient être pratiqués par Picture afin d'accroître les ventes de la veste Abstral 2.5L." },
+  questionnaire: { title: "Le questionnaire", body: "Pour y répondre, nous avons mené un questionnaire auprès d'un public varié afin de comprendre comment les consommateurs perçoivent le prix de la veste Abstral et dans quelle mesure une promotion influence leur intention d'achat." },
+  synthese: { title: "Synthèse", body: "Est-il pertinent d'appliquer une politique promotionnelle à l'approche du pic saisonnier hivernal pour la veste Abstral 2.5L, et quel surcroît de volume de ventes est requis pour compenser la baisse de marge unitaire ?" },
+};
+
 function App() {
   const initial = (() => { const h = (location.hash || "").replace("#", ""); return TABS.some((t) => t.id === h) ? h : "presentation"; })();
   const [tab, setTab] = useState(initial);
@@ -1230,8 +1239,8 @@ function App() {
     <CalcCtx.Provider value={setCalc}>
       <header className="masthead">
         <div className="wrap py-7 md:py-9 flex flex-col gap-3">
-          <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">Le marché</h1>
-          <p className="market-intro">Le marché mondial de l'outdoor technique regroupe l'ensemble des vêtements, chaussures et équipements conçus pour les activités de plein air et de montagne (randonnée, ski, snowboard, trail, escalade), dont les vestes techniques imperméables et respirantes constituent l'un des segments clés. Picture Organic Clothing s'y positionne sur le créneau des vêtements de glisse et de montagne éco-conçus, en milieu et haut de gamme.</p>
+          <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">{MAST[tab].title}</h1>
+          <p className="market-intro">{MAST[tab].body}</p>
         </div>
       </header>
       <nav className="tabs" aria-label="Onglets">

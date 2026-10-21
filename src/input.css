@@ -192,3 +192,4 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .ring-legend:hover { background: var(--surface2); }
 .noacc-tag { display: inline-block; font-size: .66rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--warn); border: 1px dashed var(--warn); border-radius: 999px; padding: 1px 7px; margin-right: 6px; }
 .market-intro { max-width: 62rem; font-size: clamp(.98rem, 1.6vw, 1.1rem); line-height: 1.6; border-left: 3px solid var(--ocre); padding-left: 14px; color: var(--mast-ink); }
+.masthead .src-link { text-decoration-color: color-mix(in srgb, var(--mast-ink) 60%, transparent); }
