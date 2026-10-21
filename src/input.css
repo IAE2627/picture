@@ -195,3 +195,9 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .masthead .src-link { text-decoration-color: color-mix(in srgb, var(--mast-ink) 60%, transparent); }
 .data-table tr.row-us td { background: color-mix(in srgb, var(--bad) 7%, transparent); }
 .problem-box { margin-top: 10px; max-width: 62rem; background: color-mix(in srgb, var(--ocre) 18%, transparent); border: 1px solid color-mix(in srgb, var(--ocre) 55%, transparent); border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; color: var(--mast-ink); }
+.seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.seg-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .82rem; color: var(--ink); }
+.seg-btn:hover { border-color: var(--muted); }
+.seg-btn.is-on { background: var(--forest); border-color: var(--forest); color: var(--on-accent); }
+.lg-line { display: inline-block; width: 0; height: 16px; }
+.lg-bar { display: inline-block; width: 22px; height: 8px; border-radius: 4px; }

@@ -769,6 +769,15 @@ function NumInput({ id, label, value, onChange, suffix, note }) {
   );
 }
 
+const SEASONS = [
+  { id: "pre", label: "Pré-saison", e: -0.65, desc: "Octobre – novembre : besoin d'équipement imminent, demande peu sensible au prix.",
+    calc: { formula: "Élasticité = milieu de la fourchette estimée dans le dossier", assumptions: ["Dossier : demande inélastique à l'approche de l'hiver, élasticité entre −0,5 et −0,8", "L'achat est prioritaire : la remise profite surtout à des clients qui auraient acheté (effet d'aubaine)"], steps: ["(−0,5 + −0,8) ÷ 2 = −0,65", "Une remise de 10 % ferait gagner environ 6,5 % de volume"] } },
+  { id: "saison", label: "Saison", e: -1.1, desc: "Décembre – janvier : pic des ventes, les clients comparent davantage les offres et les remises concurrentes.",
+    calc: { formula: "Élasticité = valeur intermédiaire entre la pré-saison et la fin de saison", assumptions: ["Hypothèse de travail, non chiffrée dans le dossier", "La demande reste forte, mais la concurrence promotionnelle (revendeurs à −30 % / −35 %) rend l'acheteur plus sensible au prix", "Demande proche de l'élasticité unitaire (−1)"], steps: ["Pré-saison −0,65 < Saison ≈ −1,1 < Fin de saison −2", "Une remise de 10 % ferait gagner environ 11 % de volume"] } },
+  { id: "fin", label: "Fin de saison", e: -2, desc: "Février – mars (soldes) : achat différable, demande élastique.",
+    calc: { formula: "Élasticité = milieu de la fourchette retenue pour la fin de saison", assumptions: ["Dossier : en période creuse ou de soldes, la demande redevient élastique car l'achat est différable", "Fourchette hypothétique de −1,5 à −2,5"], steps: ["(−1,5 + −2,5) ÷ 2 = −2", "Une remise de 10 % ferait gagner environ 20 % de volume"] } },
+];
+
 function TabPrix({ sim, setSim, survey }) {
   const t = useTokens();
   const open = useContext(CalcCtx);
@@ -845,13 +854,20 @@ function TabPrix({ sim, setSim, survey }) {
                 </label>
               ))}
             </div>
-            <Slider id="e" label="Élasticité-prix de la demande" value={sim.e} min={-3} max={-0.3} step={0.05} onChange={(v) => setSim({ ...sim, e: v })}
-              fmt={(v) => fmtN(v, 2)} hint={<span className="flex flex-wrap gap-2 mt-1">
-                <button type="button" className="pill sm" onClick={() => setSim({ ...sim, e: -0.65 })}>Pré-saison −0,65</button>
-                <button type="button" className="pill sm" onClick={() => setSim({ ...sim, e: -2 })}>Fin de saison −2</button>
-                <Est title="Élasticité-prix" calc={expCalc}><span className="text-xs">source du dossier</span></Est>
-              </span>} />
-            <NumInput id="q0" label="Volume de référence (exemple)" value={sim.q0} onChange={(v) => setSim({ ...sim, q0: Math.max(1, v) })} suffix="vestes" note="Hypothèse pour traduire les % en unités ; remplacez par le volume réel." />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between gap-3"><span className="label m-0">Période de vente (élasticité-prix)</span><span className="font-display font-semibold tabular-nums">{fmtN(sim.e, 2)}</span></div>
+              <div className="seg" role="group" aria-label="Période de vente">
+                {SEASONS.map((s) => (
+                  <button key={s.id} type="button" className={"seg-btn" + (sim.e === s.e ? " is-on" : "")} aria-pressed={sim.e === s.e} onClick={() => setSim({ ...sim, e: s.e })}>
+                    <span className="font-semibold">{s.label}</span><span className="text-xs tabular-nums">{fmtN(s.e, 2)}</span>
+                  </button>
+                ))}
+              </div>
+              {(() => { const s = SEASONS.find((x) => x.e === sim.e) || SEASONS[0]; return (
+                <div className="text-xs text-muted">{s.desc} <Est title={"Élasticité " + s.label.toLowerCase()} calc={s.calc}><span>calcul</span></Est></div>); })()}
+            </div>
+            <NumInput id="q0" label="Volume de référence" value={sim.q0} onChange={(v) => setSim({ ...sim, q0: Math.max(1, v) })} suffix="vestes"
+              note={<>Volume moyen de vente estimé en période pré-hivernale chez Picture pour ce modèle. <Est title="Volume de référence" calc={{ formula: "Hypothèse de travail : ventes de l'Abstral sur la période pré-hivernale (octobre – novembre)", assumptions: ["Aucun volume de vente par modèle n'est publié par Picture", "Ordre de grandeur cohérent avec un CA de 27,1 M€ et une gamme d'environ 17 vestes de ski plus les vestes de randonnée"], steps: ["Valeur retenue : 2 000 vestes", "Modifiable : saisissez un autre volume pour recalculer les unités"] }}><span>hypothèse</span></Est></>} />
           </Panel>
 
           <div className="flex flex-col gap-4">
@@ -862,7 +878,7 @@ function TabPrix({ sim, setSim, survey }) {
                 <p className="font-display text-xl md:text-2xl font-semibold text-balance leading-snug">
                   Une remise de {fmtN(res.d * 100, 0)} % nécessite{" "}
                   <Est title="Volume d'équilibre" calc={reqCalc}>{res.req === Infinity ? "un volume infini" : "+" + fmtP(res.req, 0)}</Est>{" "}
-                  de volume pour rester rentable. La demande d'avant-saison n'apporterait que{" "}
+                  de volume pour rester rentable. {({ pre: "La demande d'avant-saison", saison: "En pleine saison, la demande", fin: "En fin de saison, la demande" })[(SEASONS.find((x) => x.e === sim.e) || SEASONS[0]).id]} n'apporterait que{" "}
                   <Est title="Volume attendu" calc={expCalc}>+{fmtP(res.exp, 0)}</Est>.
                 </p>
               ) : (
@@ -898,7 +914,7 @@ function TabPrix({ sim, setSim, survey }) {
                     <Legend wrapperStyle={{ fontSize: 12, color: t.muted }} />
                     {isPromo && <ReferenceLine x={-sim.r} stroke={t.ocre} strokeDasharray="4 3" />}
                     <Line type="monotone" dataKey="req" name="Volume nécessaire" stroke={t.bad} strokeWidth={2.5} dot={false} isAnimationActive={false} />
-                    <Line type="monotone" dataKey="pre" name={`Attendu (élasticité ${fmtN(sim.e, 2)})`} stroke={t.forest} strokeWidth={2} dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="pre" name={`Attendu (${(SEASONS.find((x) => x.e === sim.e) || {}).label || "élasticité"} ${fmtN(sim.e, 2)})`} stroke={t.forest} strokeWidth={2} dot={false} isAnimationActive={false} />
                     <Line type="monotone" dataKey="off" name="Attendu fin de saison (−2)" stroke={t.sage} strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -922,7 +938,12 @@ function TabPrix({ sim, setSim, survey }) {
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted mt-3">Seuil de qualité perçue ≈ 130 – 140 € (Simond MT900, TNF Antora). Zone d'acceptabilité 180 – 200 €. Au-delà de 200 – 220 €, la veste affronte les 3 couches.</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted mt-4">
+            <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px solid var(--ocre)" }} />Prix simulé de l'Abstral ({fmtN(P1, 2)} €) : le prix catalogue de 195 € auquel on applique la variation choisie plus haut dans le simulateur ({sim.r > 0 ? "+" : ""}{sim.r} %)</span>
+            {r !== 0 && <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px dashed var(--muted)" }} />Prix catalogue de l'Abstral (195 €)</span>}
+            <span className="flex items-center gap-2"><span className="lg-bar ring-bg-direct" />Prix public d'une veste concurrente directe (cliquez sur le prix pour la fiche produit)</span>
+          </div>
+          <p className="text-xs text-muted mt-2">Seuil de qualité perçue ≈ 130 – 140 € (Simond MT900, TNF Antora). Zone d'acceptabilité 180 – 200 €. Au-delà de 200 – 220 €, la veste affronte les 3 couches.</p>
         </Panel>
 
         <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
@@ -1277,7 +1298,7 @@ function App() {
   const initial = (() => { const h = (location.hash || "").replace("#", ""); return TABS.some((t) => t.id === h) ? h : "presentation"; })();
   const [tab, setTab] = useState(initial);
   const [calc, setCalc] = useState(null);
-  const [sim, setSim] = useState({ r: -15, preset: "compta", e: -0.65, q0: 1000, b: { cost: 6, accepted: 210, ceiling: 220 } });
+  const [sim, setSim] = useState({ r: -15, preset: "compta", e: -0.65, q0: 2000, b: { cost: 6, accepted: 210, ceiling: 220 } });
   const [survey, setSurvey] = useState(() => summarize(exampleSurvey(), true));
   useEffect(() => { setSim((s) => ({ ...s, b: { ...s.b, accepted: Math.round(survey.medTropCher) } })); }, [survey]);
   const go = (id) => { setTab(id); try { history.replaceState(null, "", "#" + id); } catch (e) {} window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" }); };
