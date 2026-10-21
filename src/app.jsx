@@ -1183,6 +1183,8 @@ function TabSynthese() {
         </div>
       </Section>
 
+      <FinCompare />
+
       <Section eyebrow="Recommandations managériales" title="Tenir 195 € en novembre-décembre, et créer de la valeur autrement">
         <div className="grid md:grid-cols-2 gap-4">
           {[
@@ -1200,6 +1202,52 @@ function TabSynthese() {
     </div>
   );
 }
+const FIN_PEERS = [
+  { name: "Picture", period: "2026", ca: 27.1, mb: "45,8 %", rn: "−2,63 M€", cpv: -1.3, cp: "−1,3 M€", treso: 1.18, dette: "10,7 M€ (2025)", src: SRC.pappersPicture, us: true },
+  { name: "K-Way France", period: "2025", ca: 53.8, mb: "67,7 %", rn: "+7,0 M€", cpv: 48.2, cp: "48,2 M€ (81 %)", treso: 5.5, dette: "≈ 0", src: SRC.kwayPdf },
+  { name: "Patagonia Europe", period: "2025", ca: 243.6, mb: "54,4 %", rn: "+5,6 M€*", cpv: 49.7, cp: "49,7 M€ (54 %)", treso: 12.0, dette: "Aucune", src: SRC.patagoniaPdf },
+  { name: "Millet", period: "2025", ca: 73.45, mb: "—", rn: "+2,07 M€", cpv: 32.95, cp: "32,95 M€ (58 %)", treso: 15.84, dette: "0 €", src: SRC.millet, tresoNote: "dont cash-pooling" },
+  { name: "Columbia Europe", period: "2024", ca: 75.69, mb: "—", rn: "+1,45 M€", cpv: 20.78, cp: "20,78 M€ (61 %)", treso: 6.31, dette: "Aucune", src: SRC.columbia },
+];
+const PROMO_SHARE = 0.10, PROMO_RATE = 0.15;
+
+function FinCompare() {
+  const t = useTokens();
+  const rows = FIN_PEERS.map((p) => { const cost = p.ca * PROMO_SHARE * PROMO_RATE; return { ...p, cost, ratio: p.cpv > 0 ? cost / p.cpv : null }; });
+  const calc = (p) => ({
+    formula: "Coût de la promotion = CA × part du CA remisée × taux de remise ; poids = coût ÷ capitaux propres",
+    assumptions: ["Remise de 15 % sur une gamme qui pèse 10 % du chiffre d'affaires", "Volume inchangé (cas pré-saison, demande peu élastique) : la remise est une perte sèche de chiffre d'affaires et de marge", "Capitaux propres de fin d'exercice publiés"],
+    steps: [`${fmtN(p.ca, 2)} M€ × 10 % × 15 % = ${fmtN(p.ca * PROMO_SHARE * PROMO_RATE, 2)} M€`, p.cpv > 0 ? `${fmtN(p.ca * PROMO_SHARE * PROMO_RATE, 2)} ÷ ${fmtN(p.cpv, 2)} M€ de capitaux propres = ${fmtP(p.ca * PROMO_SHARE * PROMO_RATE / p.cpv, 1)}` : `Capitaux propres négatifs (${fmtN(p.cpv, 2)} M€) : aucune réserve pour absorber ce coût, qui creuserait la perte de ${fmtN(p.ca * PROMO_SHARE * PROMO_RATE, 2)} M€`],
+  });
+  const max = Math.max(...rows.filter((r) => r.ratio != null).map((r) => r.ratio));
+  return (
+    <Section eyebrow="Ce que disent les comptes" title="Les concurrents bien capitalisés peuvent financer une promotion, Picture non">
+      <p className="text-sm max-w-prose">Une remise en pleine saison se paie comptant : à volume quasi inchangé, chaque euro de remise est un euro de marge perdu. Pour le supporter, il faut des fonds propres et de la trésorerie. On compare donc ce que coûterait la même opération à Picture et à des concurrents dont nous avons les comptes : une remise de 15 % sur une gamme qui pèse 10 % du chiffre d'affaires.</p>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Entreprise</th><th className="text-right">CA</th><th className="text-right">Résultat net</th><th className="text-right">Capitaux propres</th><th className="text-right">Trésorerie</th><th className="text-right">Dette fin.</th><th className="text-right">Coût promo</th><th>Poids / capitaux propres</th></tr></thead>
+          <tbody>{rows.map((r) => (
+            <tr key={r.name} className={r.us ? "row-us" : ""}>
+              <td className="font-semibold whitespace-nowrap">{r.name}<span className="block text-xs text-muted font-normal">exercice {r.period}</span></td>
+              <td className="text-right tabular-nums whitespace-nowrap"><Src href={r.src}>{fmtN(r.ca, 1)} M€</Src></td>
+              <td className={"text-right tabular-nums whitespace-nowrap " + (r.us ? "text-bad" : "")}><Src href={r.src}>{r.rn}</Src></td>
+              <td className={"text-right tabular-nums whitespace-nowrap " + (r.us ? "text-bad" : "")}><Src href={r.src}>{r.cp}</Src></td>
+              <td className="text-right tabular-nums whitespace-nowrap"><Src href={r.src}>{fmtN(r.treso, 2)} M€</Src>{r.tresoNote && <span className="block text-xs text-muted">{r.tresoNote}</span>}</td>
+              <td className="text-right tabular-nums whitespace-nowrap"><Src href={r.src}>{r.dette}</Src></td>
+              <td className="text-right tabular-nums whitespace-nowrap"><Est title={"Coût de la promotion, " + r.name} calc={calc(r)}>{fmtN(r.cost, 2)} M€</Est></td>
+              <td className="min-w-[130px]">{r.ratio == null ? <span className="text-sm font-semibold text-bad">Impossible : déjà négatifs</span> : <div className="flex items-center gap-2"><span className="mini-track flex-1"><span style={{ width: (r.ratio / max) * 100 + "%", background: t.forest }} /></span><span className="tabular-nums text-sm font-semibold">{fmtP(r.ratio, 1)}</span></div>}</td>
+            </tr>))}</tbody>
+        </table>
+      </div>
+      <p className="text-xs text-muted">* Patagonia : résultat net plafonné par le contrat de franchise avec la maison mère ; son résultat avant redevance atteint 46,9 M€ (19,3 % du CA). Picture 2025 : dettes financières de 10,7 M€ et incertitude significative sur la continuité d'exploitation selon le commissaire aux comptes.</p>
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="reco"><span className="reco-ic"><L.ShieldCheck size={18} /></span><div><div className="font-semibold">Avec des fonds, la promotion est un choix possible</div><p className="text-sm text-muted mt-1">K-Way dégage 7 M€ de bénéfice avec une marge commerciale de 67,7 % et finance 81 % de son bilan par ses fonds propres. Patagonia et Millet n'ont aucune dette et disposent de 12 à 16 M€ de liquidités. Pour eux, la même remise ne représente que 2 à 7 % de leurs capitaux propres : ils peuvent l'utiliser pour gagner des parts de marché, écouler un stock ou contrer un concurrent, puis revenir au prix plein.</p></div></div>
+        <div className="reco" style={{ borderColor: "color-mix(in srgb, var(--bad) 40%, var(--line))" }}><span className="reco-ic" style={{ background: "color-mix(in srgb, var(--bad) 14%, transparent)", color: "var(--bad)" }}><L.AlertTriangle size={18} /></span><div><div className="font-semibold">Pour Picture, elle mettrait l'entreprise en danger</div><p className="text-sm text-muted mt-1">La même opération coûterait environ 0,41 M€, soit plus d'un tiers de la trésorerie restante (1,18 M€), et porterait la perte de 2,63 M€ à plus de 3 M€. Avec des capitaux propres déjà négatifs et 10,7 M€ de dettes financières, l'entreprise n'a aucune réserve pour l'absorber. La promotion pèserait directement sur le plan de redressement et sur le soutien des banques.</p></div></div>
+      </div>
+    </Section>
+  );
+}
+
 function Risk({ icon, title, children }) {
   return <div className="risk"><div className="flex items-center gap-2 font-semibold text-bad">{icon}<span className="text-ink">{title}</span></div><p className="text-sm mt-2 leading-relaxed">{children}</p></div>;
 }
