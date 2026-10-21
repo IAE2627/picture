@@ -1,7 +1,7 @@
 /* Layout : bandeau ardoise + onglets collants, contenu en grille sur fond blanc cassé vert-de-gris */
 :root {
   --paper: #eef0ea; --surface: #f9faf6; --surface2: #e3e8df; --ink: #1d2925; --muted: #58665f; --line: #cdd5cc;
-  --forest: #2e5341; --sage: #7c9a83; --ocre: #ad6526; --slate: #34434a; --sand: #c6a873;
+  --forest: #2e5341; --sage: #7c9a83; --ocre: #d2691e; --slate: #34434a; --sand: #c6a873;
   --good: #2c7a4d; --warn: #a96d14; --bad: #b0392c; --on-accent: #ffffff;
   --mast: #26332f; --mast-ink: #eef0ea;
   --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
@@ -11,14 +11,14 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #121815; --surface: #19211d; --surface2: #222c27; --ink: #e4e9e2; --muted: #9aa89f; --line: #33413a;
-    --forest: #7db592; --sage: #5f8069; --ocre: #dc9049; --slate: #a9bcc4; --sand: #c9ad7a;
+    --forest: #7db592; --sage: #5f8069; --ocre: #f28c3c; --slate: #a9bcc4; --sand: #c9ad7a;
     --good: #5dbb82; --warn: #e2a64b; --bad: #ec7466; --on-accent: #0f1512; --mast: #0c110f; --mast-ink: #e4e9e2;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #121815; --surface: #19211d; --surface2: #222c27; --ink: #e4e9e2; --muted: #9aa89f; --line: #33413a;
-  --forest: #7db592; --sage: #5f8069; --ocre: #dc9049; --slate: #a9bcc4; --sand: #c9ad7a;
+  --forest: #7db592; --sage: #5f8069; --ocre: #f28c3c; --slate: #a9bcc4; --sand: #c9ad7a;
   --good: #5dbb82; --warn: #e2a64b; --bad: #ec7466; --on-accent: #0f1512; --mast: #0c110f; --mast-ink: #e4e9e2;
   color-scheme: dark;
 }
@@ -37,6 +37,7 @@ code, .formula { font-family: var(--f-mono); }
 :focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; border-radius: 4px; }
 
 .masthead { background: var(--mast); color: var(--mast-ink); }
+.masthead h1 { letter-spacing: -0.01em; }
 .logo-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 8px; background: var(--ocre); color: #fff; }
 .problem { font-family: var(--f-display); font-stretch: 105%; font-size: clamp(1.05rem, 2.2vw, 1.4rem); line-height: 1.35; font-weight: 500; max-width: 60rem; border-left: 3px solid var(--ocre); padding-left: 14px; text-wrap: balance; }
 .masthead .text-muted { color: color-mix(in srgb, var(--mast-ink) 75%, transparent); }
@@ -201,3 +202,16 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .seg-btn.is-on { background: var(--forest); border-color: var(--forest); color: var(--on-accent); }
 .lg-line { display: inline-block; width: 0; height: 16px; }
 .lg-bar { display: inline-block; width: 22px; height: 8px; border-radius: 4px; }
+
+.masthead .src-link, .market-intro .src-link { display: inline; }
+.masthead .src-link svg, .market-intro .src-link svg { display: inline; vertical-align: -1px; margin-left: 3px; }
+
+
+
+/* aura gris-blanc derrière la veste (volontairement claire dans les deux thèmes) */
+.viewer { background:
+  radial-gradient(circle at 50% 46%, #ffffff 0%, rgba(255,255,255,.95) 18%, rgba(244,245,245,.9) 34%, rgba(226,229,228,.85) 55%, #cfd3d2 100%),
+  #d9dcdb; }
+.viewer::before { content: ""; position: absolute; left: 50%; top: 46%; width: 70%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(255,255,255,.35) 45%, rgba(255,255,255,0) 70%); filter: blur(8px); pointer-events: none; }
+.viewer-hint { color: #4f5855; }

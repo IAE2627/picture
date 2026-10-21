@@ -130,7 +130,12 @@ const Panel = ({ className = "", children }) => <div className={"panel " + class
 // =========================================================
 // Onglet 1 — Présentation
 // =========================================================
-function JacketViewer({ img }) {
+function JacketViewer({ img, views = [], multi = true }) {
+  const viewsRef = useRef(views);
+  const multiRef = useRef(multi);
+  const img0 = useRef(img);
+  const viewRef = useRef("front");
+  const ctlRef = useRef(null);
   const mount = useRef(null);
   const uni = useRef(null);
   const texRef = useRef(null);
@@ -160,19 +165,29 @@ function JacketViewer({ img }) {
     const cache = {};
     const getTex = (src) => { if (!cache[src]) { const tx = loader.load(src); tx.anisotropy = 8; if (T.sRGBEncoding) tx.encoding = T.sRGBEncoding; cache[src] = tx; } return cache[src]; };
     PRODUCT.colors.forEach((c) => getTex(c.img));
-    const u = { map: { value: getTex(img) }, uColor: { value: new T.Color(0xffffff) }, uTint: { value: 0 }, uLight: { value: 0 } };
+    Object.values(JACKET_VIEWS).forEach((v) => getTex(v.img));
+    const u = { map: { value: getTex(img) }, uColor: { value: new T.Color(0xffffff) }, uTint: { value: 0 }, uLight: { value: 0 }, uFlip: { value: 0 }, uOp: { value: 1 } };
     uni.current = u; texRef.current = getTex;
-    const mat = new T.ShaderMaterial({
-      uniforms: u, transparent: true, side: T.DoubleSide,
+    const mkMat = (uu) => new T.ShaderMaterial({
+      uniforms: uu, depthWrite: false, transparent: true, side: T.DoubleSide,
       vertexShader: "varying vec2 vUv; varying vec3 vN; void main(){ vUv=uv; vN=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "uniform sampler2D map; uniform vec3 uColor; uniform float uTint; uniform float uLight; varying vec2 vUv; varying vec3 vN;" +
-        "void main(){ vec2 uv=vUv; if(!gl_FrontFacing) uv.x=1.0-uv.x; vec4 t=texture2D(map,uv); if(t.a<0.02) discard;" +
+      fragmentShader: "uniform sampler2D map; uniform vec3 uColor; uniform float uTint; uniform float uLight; uniform float uFlip; uniform float uOp; varying vec2 vUv; varying vec3 vN;" +
+        "void main(){ vec2 uv=vUv; if(uFlip>0.5) uv.x=1.0-uv.x; if(!gl_FrontFacing) uv.x=1.0-uv.x; vec4 t=texture2D(map,uv); if(t.a*uOp<0.01) discard;" +
         "float l=dot(t.rgb,vec3(0.299,0.587,0.114)); vec3 c=t.rgb;" +
         "if(uTint>0.5){ float sh=clamp(l*3.2,0.0,1.6); c=mix(uColor*(0.35+sh), t.rgb, smoothstep(0.42,0.62,l)); }" +
-        "float d=0.82+0.18*clamp(dot(normalize(vN),normalize(vec3(0.4,0.5,1.0))),0.0,1.0); if(!gl_FrontFacing) d*=0.7; gl_FragColor=vec4(c*d,t.a); }",
+        "float d=0.82+0.18*clamp(dot(normalize(vN),normalize(vec3(0.4,0.5,1.0))),0.0,1.0); if(!gl_FrontFacing) d*=0.7; gl_FragColor=vec4(c*d,t.a*uOp); }",
     });
+    const mat = mkMat(u);
     const g = new T.Group();
-    g.add(new T.Mesh(geo, mat));
+    const mesh = new T.Mesh(geo, mat); g.add(mesh);
+    const mkU = (src) => ({ map: { value: getTex(src) }, uColor: { value: new T.Color(0xffffff) }, uTint: { value: 0 }, uLight: { value: 0 }, uFlip: { value: 0 }, uOp: { value: 0 } });
+    const u34 = mkU(JACKET_VIEWS.v34.img), uB = mkU(JACKET_VIEWS.back.img), uQ = mkU(JACKET_VIEWS.back.img);
+    const m34 = new T.Mesh(geo, mkMat(u34)), mB = new T.Mesh(geo, mkMat(uB)), mQ = new T.Mesh(geo, mkMat(uQ));
+    m34.scale.x = JACKET_VIEWS.v34.aspect / (900 / 1151); mB.scale.x = JACKET_VIEWS.back.aspect / (900 / 1151);
+    m34.renderOrder = 1; mB.renderOrder = 2; g.add(m34); g.add(mB); g.add(mQ);
+    PRODUCT.colors.forEach((c) => (c.views || []).forEach((v) => getTex(v.img)));
+    const aspectOf = (tx) => (tx && tx.image && tx.image.width ? tx.image.width / tx.image.height : 900 / 1151) / (900 / 1151);
+    const sst = (a0, a1, x) => { const t = Math.min(1, Math.max(0, (x - a0) / (a1 - a0))); return t * t * (3 - 2 * t); };
     // ombre au sol
     const sc = document.createElement("canvas"); sc.width = sc.height = 128; const cx = sc.getContext("2d");
     const gr = cx.createRadialGradient(64, 64, 4, 64, 64, 64); gr.addColorStop(0, "rgba(0,0,0,0.28)"); gr.addColorStop(1, "rgba(0,0,0,0)"); cx.fillStyle = gr; cx.fillRect(0, 0, 128, 128);
@@ -184,8 +199,10 @@ function JacketViewer({ img }) {
     if (T.OrbitControls) {
       controls = new T.OrbitControls(camera, renderer.domElement);
       controls.enableDamping = true; controls.enablePan = false; controls.minDistance = 2.4; controls.maxDistance = 6.5;
-      controls.minAzimuthAngle = -0.75; controls.maxAzimuthAngle = 0.75; controls.minPolarAngle = 1.2; controls.maxPolarAngle = 1.95;
-      controls.addEventListener("start", () => { touched = true; });
+      controls.minPolarAngle = 1.2; controls.maxPolarAngle = 1.95;
+      const setLimits = (m) => { controls.minAzimuthAngle = m ? -Infinity : -0.75; controls.maxAzimuthAngle = m ? Infinity : 0.75; controls.autoRotate = m && !touched && !window.matchMedia("(prefers-reduced-motion: reduce)").matches; controls.autoRotateSpeed = 1.4; };
+      setLimits(multiRef.current); ctlRef.current = { setLimits };
+      controls.addEventListener("start", () => { touched = true; controls.autoRotate = false; });
     }
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -202,7 +219,40 @@ function JacketViewer({ img }) {
     let raf, frame = 0; const t0 = performance.now();
     const loop = () => {
       raf = requestAnimationFrame(loop);
-      if (!touched && !reduce) g.rotation.y = Math.sin((performance.now() - t0) / 2600) * 0.32;
+      let wF = 1;
+      const vs = viewsRef.current || [];
+      const slots = [[u, mesh], [u34, m34], [uB, mB], [uQ, mQ]];
+      if (multiRef.current && controls && vs.length) {
+        g.rotation.y = 0;
+        const az = controls.getAzimuthalAngle(), A = Math.abs(az), sg = az < 0 ? -1 : 1;
+        const all = [{ ang: 0, img: img0.current, flip: false }, ...vs].sort((x, y) => x.ang - y.ang);
+        let i = 0; while (i < all.length - 1 && A > all[i + 1].ang) i++;
+        const w = all.map(() => 0);
+        if (i >= all.length - 1) w[all.length - 1] = 1;
+        else { const uu = (A - all[i].ang) / (all[i + 1].ang - all[i].ang); const t = sst(0.25, 0.75, uu); w[i] = 1 - t; w[i + 1] = t; }
+        wF = w[0];
+        const cw = all.reduce((s, v, k) => s + w[k] * sg * v.ang, 0);
+        const layers = [];
+        slots.forEach(([uu, mm], k) => {
+          const v = all[k];
+          if (!v) { uu.uOp.value = 0; mm.visible = false; return; }
+          mm.visible = true;
+          const tx = getTex(v.img); if (uu.map.value !== tx) uu.map.value = tx;
+          uu.uFlip.value = v.flip && az < 0 ? 1 : 0;
+          mm.scale.x = aspectOf(tx);
+          mm.rotation.y = az - (az - cw) * 0.4;
+          layers.push([uu, mm, w[k]]);
+        });
+        layers.sort((x, y) => y[2] - x[2]);
+        const top = layers[0][2] || 1;
+        layers.forEach(([uu, mm, ww], k) => { uu.uOp.value = k === 0 ? 1 : Math.min(1, ww / top); mm.renderOrder = k === 0 ? 0 : 4 - k; });
+      } else {
+        slots.forEach(([uu, mm], k) => { if (k) { uu.uOp.value = 0; mm.visible = false; } });
+        mesh.visible = true; mesh.rotation.y = 0; mesh.scale.x = aspectOf(u.map.value); u.uFlip.value = 0; u.uOp.value = 1;
+        if (!touched && !reduce) g.rotation.y = Math.sin((performance.now() - t0) / 2600) * 0.32;
+        if (u.map.value !== getTex(img0.current)) u.map.value = getTex(img0.current);
+      }
+      viewRef.current = wF > 0.85 ? "front" : "other";
       controls && controls.update();
       renderer.render(scene, camera);
       if (frame++ % 2 === 0) {
@@ -210,7 +260,7 @@ function JacketViewer({ img }) {
         setSpots(pts.map((p) => {
           const wp = p.v.clone().applyMatrix4(g.matrixWorld);
           camDir.copy(camera.position).sub(wp).normalize();
-          const vis = camDir.dot(p.n.clone().transformDirection(g.matrixWorld)) > 0.1;
+          const vis = camDir.dot(p.n.clone().transformDirection(g.matrixWorld)) > 0.1 && viewRef.current === "front";
           const s = wp.clone().project(camera);
           return { id: p.id, label: p.label, text: p.text, x: (s.x * 0.5 + 0.5) * w, y: (-s.y * 0.5 + 0.5) * h, vis };
         }));
@@ -220,7 +270,11 @@ function JacketViewer({ img }) {
     return () => { cancelAnimationFrame(raf); ro.disconnect(); controls && controls.dispose(); renderer.dispose(); el.innerHTML = ""; };
   }, []);
 
-  useEffect(() => { if (uni.current && texRef.current) uni.current.map.value = texRef.current(img); }, [img]);
+  useEffect(() => {
+    img0.current = img; multiRef.current = multi; viewsRef.current = views;
+    if (uni.current && texRef.current) uni.current.map.value = texRef.current(img);
+    if (ctlRef.current) ctlRef.current.setLimits(multi);
+  }, [img, multi, views]);
 
   if (err) return <div className="viewer grid place-items-center p-4"><img src={img} alt="Veste Abstral 2.5L" className="max-h-full" /></div>;
   return (
@@ -236,7 +290,7 @@ function JacketViewer({ img }) {
           )}
         </button>
       ))}
-      <div className="viewer-hint"><L.Rotate3d size={14} /> Glisser pour tourner · molette ou pincement pour zoomer · cliquer un point</div>
+      <div className="viewer-hint"><L.Rotate3d size={14} /> {multi ? "Tour complet : face, trois-quarts, dos" : "Glisser pour tourner"} · molette ou pincement pour zoomer · cliquer un point</div>
     </div>
   );
 }
@@ -248,7 +302,7 @@ function TabPresentation() {
     <div className="flex flex-col gap-10">
       <div className="grid lg:grid-cols-[1.15fr_1fr] gap-6 items-start">
         <Panel className="p-0 overflow-hidden">
-          <JacketViewer img={col.img} />
+          <JacketViewer img={col.img} views={col.views || []} multi={col.id === "black"} />
           <div className="p-4 flex flex-wrap items-center gap-3 border-t border-line">
             <span className="label m-0">Coloris</span>
             {PRODUCT.colors.map((c) => (
@@ -1324,7 +1378,7 @@ function App() {
             const I = tb.icon;
             return (
               <button key={tb.id} role="tab" aria-selected={tab === tb.id} className={"tab" + (tab === tb.id ? " is-on" : "")} onClick={() => go(tb.id)}>
-                <span className="tab-n">{i + 1}</span><I size={15} aria-hidden="true" />{tb.label}
+                <I size={15} aria-hidden="true" />{tb.label}
               </button>
             );
           })}

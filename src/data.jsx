@@ -5,6 +5,7 @@
 // ============================================================
 
 const JACKET_IMG = "__JACKET_IMG__";
+const JACKET_VIEWS = { v34: { img: "__V34__", aspect: 700 / 1258 }, back: { img: "__VBACK__", aspect: 700 / 866 } };
 
 const SRC = {
   pappersPicture: "https://www.pappers.fr/entreprise/picture-organic-clothing-509202180",
@@ -39,7 +40,7 @@ const PRODUCT = {
   priceRef: 195, // arrondi utilisé dans tous les calculs du dossier
   priceRetailNow: { label: "Prix constaté chez Snowleader (oct. 2026)", value: 126.9, isEstimated: false, sourceUrl: SRC.snowleader },
   colors: [
-    { id: "black", name: "Noir", hex: "#232526", hex2: "#3a3d3f", img: JACKET_IMG },
+    { id: "black", name: "Noir", hex: "#232526", hex2: "#3a3d3f", img: JACKET_IMG, views: [{ ang: 1.15, img: JACKET_VIEWS.v34.img, flip: true }, { ang: Math.PI, img: JACKET_VIEWS.back.img, flip: false }] },
     { id: "c0", name: "Blanc / kaki / menthe", hex: "#ebe8e5", hex2: "#6fd1b9", img: "__COL_0__" },
     { id: "c1", name: "Kaki / noir / sable", hex: "#6b6a2c", hex2: "#f0e3c8", img: "__COL_1__" },
     { id: "c2", name: "Sable / noir", hex: "#ddd5c9", hex2: "#2b2b2b", img: "__COL_2__" },
