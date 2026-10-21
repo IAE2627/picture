@@ -270,13 +270,8 @@ function TabPresentation() {
           <div className="price-card">
             <div>
               <div className="label">Prix catalogue officiel</div>
-              <div className="font-display text-4xl font-bold tabular-nums"><Src href={PRODUCT.priceTTC.sourceUrl}>194,90 €</Src></div>
-              <div className="text-xs text-muted mt-1">TTC, prix public conseillé · <Src href={SRC.pictureSite}>site officiel Picture</Src></div>
-            </div>
-            <div className="border-l border-line pl-4">
-              <div className="label">Déjà remisée en ligne</div>
-              <div className="font-display text-2xl font-semibold tabular-nums text-bad"><Src href={PRODUCT.priceRetailNow.sourceUrl}>126,90 €</Src></div>
-              <div className="text-xs text-muted mt-1">−35 % chez Snowleader (relevé oct. 2026)</div>
+              <div className="font-display text-4xl font-bold tabular-nums"><Src href={SRC.abstral}>195 €</Src></div>
+              <div className="text-xs text-muted mt-1">TTC, prix affiché sur la <Src href={SRC.abstral}>fiche produit Picture</Src></div>
             </div>
           </div>
           <dl className="spec-list">
@@ -320,7 +315,26 @@ function BrandFile() {
   const [sub, setSub] = useState("tarifs");
   const P = SRC.pappersPicture;
   const tabs = [["tarifs", "Tarifs"], ["sante", "Santé financière"], ["invest", "Investissements"], ["strat", "Stratégie"]];
-  const ladder = [["Parker", 185], ["Parker Printed", 195], ["Basement", 199.9], ["Puffer", 219.9], ["Nitric", 249.9], ["Klyne", 279.9], ["Felnor", 299.9], ["Object", 349.9], ["Orokoon", 379.9], ["Goods / Broader 3L", 399.9], ["Merassen Gore-Tex", 499.9], ["Huron Gore-Tex 3L", 649.9]];
+  const PU = "https://www.picture-organic-clothing.com/fr-fr/products/";
+  const ladder = [
+    ["Parker", 185, "mvt0633-veste-de-ski-and-snowboard-unisexe-parker?variant=56099380855169"],
+    ["Parker Printed", 195, "mvt0631-veste-de-ski-and-snowboard-unisexe-parker-printed?variant=56099378987393"],
+    ["Basement", 199.9, "mvt0627-veste-de-ski-and-snowboard-homme-basement?variant=56099376071041"],
+    ["Puffer", 219.9, "mvt0625-doudoune-de-ski-and-snowboard-homme-puffer?variant=56099323773313"],
+    ["FC Picture", 219.9, "mvt0620-veste-de-ski-and-snowboard-fc-picture?variant=56099313287553"],
+    ["Team Lumilautailijat", 219.9, "mvt0634-team-lumilautailijat-jkt?variant=56099382067585"],
+    ["Klyne 1/4", 225, "mvt0629-klyne-14-jkt?variant=56099377217921"],
+    ["Nitric", 249.9, "mvt0624-veste-de-ski-and-snowboard-homme-nitric?variant=56099325247873"],
+    ["Puffer GRDT", 249.9, "mvt0628-veste-de-ski-and-snowboard-homme-puffer-grdt?variant=56099376988545"],
+    ["Klyne", 279.9, "mvt0626-veste-de-ski-and-snowboard-homme-klyne?variant=56099375317377"],
+    ["Felnor", 299.9, "mvt0623-veste-de-ski-and-snowboard-homme-felnor?variant=56099321315713"],
+    ["Object", 349.9, "mvt0622-veste-de-ski-and-snowboard-homme-picture-object?variant=56099319382401"],
+    ["Orokoon", 379.9, "mvt0630-orokoon-jkt?variant=56099378725249"],
+    ["Goods", 399.9, "mvt0581-veste-de-ski-and-snowboard-homme-goods?variant=56099235889537"],
+    ["Broader 3L", 399.9, "mvt0621-broader-3l-jkt?variant=56099312271745"],
+    ["Merassen Gore-Tex", 499.9, "mvt0632-veste-de-ski-and-snowboard-homme-merassen-gore-tex?variant=56099379708289"],
+    ["Huron Gore-Tex 3L", 649.9, "mvt0580-veste-de-ski-and-snowboard-3-couches-gore-tex-homme-huron?variant=55814027608449"],
+  ];
   return (
     <Panel className="p-0 overflow-hidden">
       <div className="px-5 pt-5"><div className="eyebrow">Fiche Picture · exercice 2025</div></div>
@@ -330,16 +344,16 @@ function BrandFile() {
       <div className="p-5 flex flex-col gap-4 text-sm">
         {sub === "tarifs" && (<>
           <div>
-            <div className="label">Vestes de ski homme, prix publics du site</div>
+            <div className="label">Les 17 vestes de ski et snowboard homme, prix publics du site</div>
             <div className="flex flex-col gap-1 mt-1">
-              {ladder.map(([n, p]) => (
-                <div key={n} className="mini-ladder"><span className="truncate">{n}</span><span className="mini-track"><span style={{ width: (p / 650) * 100 + "%" }} /></span><span className="tabular-nums text-right"><Src href={SRC.pictureSite}>{fmtE(p, p % 1 ? 2 : 0)}</Src></span></div>
+              {ladder.map(([n, p, slug]) => (
+                <div key={n} className="mini-ladder"><span className="truncate">{n}</span><span className="mini-track"><span style={{ width: (p / 650) * 100 + "%" }} /></span><span className="tabular-nums text-right"><Src href={PU + slug}>{fmtE(p, p % 1 ? 2 : 0)}</Src></span></div>
               ))}
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <Kpi label="Prix moyen des 17 vestes de ski" v={<Est title="Prix moyen des vestes de ski homme" calc={{ formula: "Moyenne simple des prix publics des 17 vestes de ski homme", assumptions: ["Prix relevés sur le site Picture", "Moyenne non pondérée par les ventes"], steps: ["Somme des 17 prix ÷ 17 ≈ 310 €"] }}>≈ 310 €</Est>} sub="majorité entre 200 et 400 €" />
-            <Kpi label="Abstral (homme et femme)" v={<Src href={SRC.pictureSite}>195 €</Src>} sub="sous l'entrée de gamme ski (185 – 200 €)" />
+            <Kpi label="Abstral (homme et femme)" v={<Src href={SRC.abstral}>195 €</Src>} sub="sous l'entrée de gamme ski (185 – 200 €)" />
           </div>
           <p><strong>Autres vêtements.</strong> Homme : t-shirts 39,90 €, sweats 65 à 115 €, polaires 139,90 à 165 €, chemises 85 à 110 €, pantalon 95 €, doudoune Hilko 269,90 €. Femme : t-shirts 35 à 39,90 €, polaires 149,90 €, chemises 110 à 120 €, gilet réversible 149,90 €. Accessoires : bonnet 35 €, casquette 39,90 €.</p>
           <p><strong>Politique de prix.</strong> Prix fixe affiché en saison, avec un outlet séparé (« bons plans ») pour solder. Les revendeurs tiers soldent jusqu'à −50 % ou −60 % les collections précédentes.</p>
@@ -616,7 +630,7 @@ function TabCouts() {
     { name: "Marge magasin", base: WHOLESALE_HT, val: retailMargin, kind: "margin", calc: { formula: "Prix public HT − prix de gros HT", assumptions: ["Coefficient multiplicateur distributeur de 2,1 (t-shirt Picture)", "Couvre loyer, personnel, démarque et marge du revendeur"], steps: [`162,50 − ${fmtN(WHOLESALE_HT, 2)} = ${fmtE(retailMargin)}`, `Taux de marque magasin : ${fmtE(retailMargin)} ÷ 162,50 = ${fmtP(retailMargin / PRICE_HT)}`] } },
     { name: "Prix public HT", base: 0, val: PRICE_HT, kind: "total", calc: { formula: "Prix TTC ÷ 1,2", assumptions: ["TVA à 20 %"], steps: ["195 ÷ 1,2 = 162,50 €"] } },
     { name: "TVA 20 %", base: PRICE_HT, val: tva, kind: "tax", calc: { formula: "Prix HT × 20 %", assumptions: ["Taux normal de TVA en France"], steps: ["162,50 × 0,20 = 32,50 €"] } },
-    { name: "Prix public TTC", base: 0, val: PRODUCT.priceRef, kind: "final", calc: { formula: "Prix catalogue arrondi", assumptions: ["194,90 € arrondi à 195 € dans tous les calculs du dossier"], steps: ["162,50 + 32,50 = 195,00 €"] } },
+    { name: "Prix public TTC", base: 0, val: PRODUCT.priceRef, kind: "final", calc: { formula: "Prix catalogue du site Picture", assumptions: ["195 € TTC affiché sur la fiche produit Picture"], steps: ["162,50 + 32,50 = 195,00 €"] } },
   ];
   const kindColor = { cost: t.slate, margin: t.forest, total: t.sage, tax: t.muted, final: t.ocre };
 
@@ -1236,7 +1250,7 @@ function App() {
           {TABS.findIndex((x) => x.id === tab) < TABS.length - 1 && <button className="btn" onClick={() => go(TABS[TABS.findIndex((x) => x.id === tab) + 1].id)}>{TABS[TABS.findIndex((x) => x.id === tab) + 1].label} →</button>}
         </div>
       </main>
-      <footer className="wrap pb-10 text-xs text-muted flex flex-col gap-3"><Legendary />Données : dossier « Prix et budget – Picture », comptes publiés (Pappers, theaccounts.uk), fiche produit Snowleader. Les estimations sont signalées et détaillées.</footer>
+      <footer className="wrap pb-10 text-xs text-muted flex flex-col gap-3"><Legendary />Données : dossier « Prix et budget – Picture », comptes publiés (Pappers, theaccounts.uk), fiche produit Picture. Les estimations sont signalées et détaillées.</footer>
       <CalcModal data={calc} onClose={() => setCalc(null)} />
     </CalcCtx.Provider>
   );

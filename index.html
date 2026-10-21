@@ -32,7 +32,8 @@ const SRC = {
   pappersPicture: "https://www.pappers.fr/entreprise/picture-organic-clothing-509202180",
   snowleader: "https://www.snowleader.com/en/abstral-2-5l-jkt-tobacco-PICT06149.html",
   snowleaderW: "https://www.snowleader.nl/en/abstral-2-5l-jkt-w-ash-rose-PICT03248.html",
-  pictureSite: "https://www.picture-organic-clothing.com/fr/",
+  pictureSite: "https://www.picture-organic-clothing.com/fr-fr/",
+  abstral: "https://www.picture-organic-clothing.com/fr-fr/products/mvt0552-veste-de-randonnee-homme-abstral-2-5l?variant=55732473627009",
   pictureMadeIn: "https://eco.picture-organic-clothing.com/fr/made-in-france/",
   outdoorsMagic: "https://outdoorsmagic.com/article/picture-abstral-2-5l-jacket-review/",
   patagoniaPdf: "https://www.pappers.fr/entreprise/patagonia-europe-cooperatief-ua-succursale-francaise-789919719/comptes/PATAGONIA%20EUROPE%20COOPERATIEF%20U.A.%20-%20SUCCURSALE%20FRANCAISE%20-%20Comptes%20sociaux%202025%2005-05-2026.pdf",
@@ -58,9 +59,9 @@ const PRODUCT = {
   name: "Abstral 2.5L Jacket",
   priceTTC: {
     label: "Prix catalogue",
-    value: 194.9,
+    value: 195,
     isEstimated: false,
-    sourceUrl: SRC.snowleader
+    sourceUrl: SRC.abstral
   },
   priceRef: 195,
   // arrondi utilisé dans tous les calculs du dossier
@@ -115,37 +116,45 @@ const PRODUCT = {
   }],
   specs: [{
     k: "Construction",
-    v: "2,5 couches, coutures entièrement étanchées",
-    src: SRC.snowleader
+    v: "2,5 couches, coutures entièrement scellées",
+    frag: "Membrane 2.5 couches"
   }, {
     k: "Membrane",
-    v: "DryPlay 20K / 20K (imperméabilité / respirabilité)",
-    src: SRC.snowleader
+    v: "Dryplay 20K / 20K, laminé PU, imperméable et respirante",
+    frag: "Dryplay 20K/20K"
   }, {
     k: "Tissu",
-    v: "52 % polyester recyclé, 48 % polyester circulaire",
-    src: SRC.snowleader
+    v: "100 % polyester circulaire",
+    frag: "polyester circulaire"
   }, {
     k: "Déperlant",
-    v: "Teflon EcoElite, sans PFC",
-    src: SRC.snowleader
+    v: "Traitement DWR sans PFC",
+    frag: "Traitement DWR sans PFC"
   }, {
     k: "Poids",
     v: "466 g",
-    src: SRC.snowleader
+    frag: "0.466 kg"
   }, {
     k: "Compacité",
-    v: "Se range dans sa poche droite",
-    src: SRC.snowleader
+    v: "Compressible, se range dans sa poche droite",
+    frag: "Compressible"
   }, {
-    k: "Zips",
-    v: "YKK pleine longueur, ventilations zippées",
-    src: SRC.snowleader
+    k: "Zips et ventilation",
+    v: "Zip imperméable YKK, ouvertures zippées sous les aisselles",
+    frag: "zip imperméable YKK"
   }, {
-    k: "Certification",
-    v: "Oeko-Tex Standard 100",
-    src: SRC.snowleader
-  }],
+    k: "Certifications",
+    v: "Usine Lilian International (Dongguan, Chine) : Fair Wear Foundation, ISO 9001, Sedex (4P), WRAP, CQC, SGS, Accordia, GRS",
+    url: "https://eco.picture-organic-clothing.com/fr/fournisseurs/",
+    frag: "Vestes et pantalons ski/snow"
+  }, {
+    k: "Garantie",
+    v: "Garantie à vie Picture",
+    frag: "Garantie à vie Picture"
+  }].map(s => ({
+    ...s,
+    src: (s.url || SRC.abstral) + "#:~:text=" + encodeURIComponent(s.frag).replace(/-/g, "%2D")
+  })),
   hotspots: [{
     id: "hood",
     label: "Capuche réglable",
@@ -301,12 +310,12 @@ const BRANDS = [{
   name: "Picture",
   ring: "nous",
   model: "Abstral 2.5L",
-  price: 194.9,
-  priceSrc: SRC.snowleader,
+  price: 195,
+  priceSrc: SRC.abstral,
   eco: [2, 2, 2, 2, 2],
   ca: 27.1,
-  shop: SRC.pictureSite,
-  tarifs: "Prix resserrés : l'Abstral entre 145,90 € et 194,90 € selon la version.",
+  shop: SRC.abstral,
+  tarifs: "Abstral 2.5L à 195 € sur le site Picture ; vestes de ski de 185 à 649,90 €.",
   strategy: "Marque clermontoise de glisse et d'outdoor, éco-conception (polyester recyclé et biosourcé, sans PFC), programme Circular.",
   invest: "Voir l'onglet Coûts : 22 usines partenaires, 84 % du volume dans 2 usines.",
   fin: {
@@ -1663,22 +1672,12 @@ function TabPresentation() {
   }, "Prix catalogue officiel"), /*#__PURE__*/React.createElement("div", {
     className: "font-display text-4xl font-bold tabular-nums"
   }, /*#__PURE__*/React.createElement(Src, {
-    href: PRODUCT.priceTTC.sourceUrl
-  }, "194,90 \u20AC")), /*#__PURE__*/React.createElement("div", {
+    href: SRC.abstral
+  }, "195 \u20AC")), /*#__PURE__*/React.createElement("div", {
     className: "text-xs text-muted mt-1"
-  }, "TTC, prix public conseill\xE9 \xB7 ", /*#__PURE__*/React.createElement(Src, {
-    href: SRC.pictureSite
-  }, "site officiel Picture"))), /*#__PURE__*/React.createElement("div", {
-    className: "border-l border-line pl-4"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "label"
-  }, "D\xE9j\xE0 remis\xE9e en ligne"), /*#__PURE__*/React.createElement("div", {
-    className: "font-display text-2xl font-semibold tabular-nums text-bad"
-  }, /*#__PURE__*/React.createElement(Src, {
-    href: PRODUCT.priceRetailNow.sourceUrl
-  }, "126,90 \u20AC")), /*#__PURE__*/React.createElement("div", {
-    className: "text-xs text-muted mt-1"
-  }, "\u221235 % chez Snowleader (relev\xE9 oct. 2026)"))), /*#__PURE__*/React.createElement("dl", {
+  }, "TTC, prix affich\xE9 sur la ", /*#__PURE__*/React.createElement(Src, {
+    href: SRC.abstral
+  }, "fiche produit Picture")))), /*#__PURE__*/React.createElement("dl", {
     className: "spec-list"
   }, PRODUCT.specs.map(s => /*#__PURE__*/React.createElement("div", {
     key: s.k
@@ -1737,7 +1736,8 @@ function BrandFile() {
   const [sub, setSub] = useState("tarifs");
   const P = SRC.pappersPicture;
   const tabs = [["tarifs", "Tarifs"], ["sante", "Santé financière"], ["invest", "Investissements"], ["strat", "Stratégie"]];
-  const ladder = [["Parker", 185], ["Parker Printed", 195], ["Basement", 199.9], ["Puffer", 219.9], ["Nitric", 249.9], ["Klyne", 279.9], ["Felnor", 299.9], ["Object", 349.9], ["Orokoon", 379.9], ["Goods / Broader 3L", 399.9], ["Merassen Gore-Tex", 499.9], ["Huron Gore-Tex 3L", 649.9]];
+  const PU = "https://www.picture-organic-clothing.com/fr-fr/products/";
+  const ladder = [["Parker", 185, "mvt0633-veste-de-ski-and-snowboard-unisexe-parker?variant=56099380855169"], ["Parker Printed", 195, "mvt0631-veste-de-ski-and-snowboard-unisexe-parker-printed?variant=56099378987393"], ["Basement", 199.9, "mvt0627-veste-de-ski-and-snowboard-homme-basement?variant=56099376071041"], ["Puffer", 219.9, "mvt0625-doudoune-de-ski-and-snowboard-homme-puffer?variant=56099323773313"], ["FC Picture", 219.9, "mvt0620-veste-de-ski-and-snowboard-fc-picture?variant=56099313287553"], ["Team Lumilautailijat", 219.9, "mvt0634-team-lumilautailijat-jkt?variant=56099382067585"], ["Klyne 1/4", 225, "mvt0629-klyne-14-jkt?variant=56099377217921"], ["Nitric", 249.9, "mvt0624-veste-de-ski-and-snowboard-homme-nitric?variant=56099325247873"], ["Puffer GRDT", 249.9, "mvt0628-veste-de-ski-and-snowboard-homme-puffer-grdt?variant=56099376988545"], ["Klyne", 279.9, "mvt0626-veste-de-ski-and-snowboard-homme-klyne?variant=56099375317377"], ["Felnor", 299.9, "mvt0623-veste-de-ski-and-snowboard-homme-felnor?variant=56099321315713"], ["Object", 349.9, "mvt0622-veste-de-ski-and-snowboard-homme-picture-object?variant=56099319382401"], ["Orokoon", 379.9, "mvt0630-orokoon-jkt?variant=56099378725249"], ["Goods", 399.9, "mvt0581-veste-de-ski-and-snowboard-homme-goods?variant=56099235889537"], ["Broader 3L", 399.9, "mvt0621-broader-3l-jkt?variant=56099312271745"], ["Merassen Gore-Tex", 499.9, "mvt0632-veste-de-ski-and-snowboard-homme-merassen-gore-tex?variant=56099379708289"], ["Huron Gore-Tex 3L", 649.9, "mvt0580-veste-de-ski-and-snowboard-3-couches-gore-tex-homme-huron?variant=55814027608449"]];
   return /*#__PURE__*/React.createElement(Panel, {
     className: "p-0 overflow-hidden"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1757,9 +1757,9 @@ function BrandFile() {
     className: "p-5 flex flex-col gap-4 text-sm"
   }, sub === "tarifs" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "label"
-  }, "Vestes de ski homme, prix publics du site"), /*#__PURE__*/React.createElement("div", {
+  }, "Les 17 vestes de ski et snowboard homme, prix publics du site"), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col gap-1 mt-1"
-  }, ladder.map(([n, p]) => /*#__PURE__*/React.createElement("div", {
+  }, ladder.map(([n, p, slug]) => /*#__PURE__*/React.createElement("div", {
     key: n,
     className: "mini-ladder"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1773,7 +1773,7 @@ function BrandFile() {
   })), /*#__PURE__*/React.createElement("span", {
     className: "tabular-nums text-right"
   }, /*#__PURE__*/React.createElement(Src, {
-    href: SRC.pictureSite
+    href: PU + slug
   }, fmtE(p, p % 1 ? 2 : 0))))))), /*#__PURE__*/React.createElement("div", {
     className: "grid sm:grid-cols-2 gap-3"
   }, /*#__PURE__*/React.createElement(Kpi, {
@@ -1790,7 +1790,7 @@ function BrandFile() {
   }), /*#__PURE__*/React.createElement(Kpi, {
     label: "Abstral (homme et femme)",
     v: /*#__PURE__*/React.createElement(Src, {
-      href: SRC.pictureSite
+      href: SRC.abstral
     }, "195 \u20AC"),
     sub: "sous l'entr\xE9e de gamme ski (185 \u2013 200 \u20AC)"
   })), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Autres v\xEAtements."), " Homme : t-shirts 39,90 \u20AC, sweats 65 \xE0 115 \u20AC, polaires 139,90 \xE0 165 \u20AC, chemises 85 \xE0 110 \u20AC, pantalon 95 \u20AC, doudoune Hilko 269,90 \u20AC. Femme : t-shirts 35 \xE0 39,90 \u20AC, polaires 149,90 \u20AC, chemises 110 \xE0 120 \u20AC, gilet r\xE9versible 149,90 \u20AC. Accessoires : bonnet 35 \u20AC, casquette 39,90 \u20AC."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Politique de prix."), " Prix fixe affich\xE9 en saison, avec un outlet s\xE9par\xE9 (\xAB bons plans \xBB) pour solder. Les revendeurs tiers soldent jusqu'\xE0 \u221250 % ou \u221260 % les collections pr\xE9c\xE9dentes."), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "Coh\xE9rence avec les comptes."), " Marge sur co\xFBts d'achat de ", /*#__PURE__*/React.createElement(Src, {
@@ -2414,8 +2414,8 @@ function TabCouts() {
     val: PRODUCT.priceRef,
     kind: "final",
     calc: {
-      formula: "Prix catalogue arrondi",
-      assumptions: ["194,90 € arrondi à 195 € dans tous les calculs du dossier"],
+      formula: "Prix catalogue du site Picture",
+      assumptions: ["195 € TTC affiché sur la fiche produit Picture"],
       steps: ["162,50 + 32,50 = 195,00 €"]
     }
   }];
@@ -3997,7 +3997,7 @@ function App() {
     onClick: () => go(TABS[TABS.findIndex(x => x.id === tab) + 1].id)
   }, TABS[TABS.findIndex(x => x.id === tab) + 1].label, " \u2192"))), /*#__PURE__*/React.createElement("footer", {
     className: "wrap pb-10 text-xs text-muted flex flex-col gap-3"
-  }, /*#__PURE__*/React.createElement(Legendary, null), "Donn\xE9es : dossier \xAB Prix et budget \u2013 Picture \xBB, comptes publi\xE9s (Pappers, theaccounts.uk), fiche produit Snowleader. Les estimations sont signal\xE9es et d\xE9taill\xE9es."), /*#__PURE__*/React.createElement(CalcModal, {
+  }, /*#__PURE__*/React.createElement(Legendary, null), "Donn\xE9es : dossier \xAB Prix et budget \u2013 Picture \xBB, comptes publi\xE9s (Pappers, theaccounts.uk), fiche produit Picture. Les estimations sont signal\xE9es et d\xE9taill\xE9es."), /*#__PURE__*/React.createElement(CalcModal, {
     data: calc,
     onClose: () => setCalc(null)
   }));

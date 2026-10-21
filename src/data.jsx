@@ -10,7 +10,8 @@ const SRC = {
   pappersPicture: "https://www.pappers.fr/entreprise/picture-organic-clothing-509202180",
   snowleader: "https://www.snowleader.com/en/abstral-2-5l-jkt-tobacco-PICT06149.html",
   snowleaderW: "https://www.snowleader.nl/en/abstral-2-5l-jkt-w-ash-rose-PICT03248.html",
-  pictureSite: "https://www.picture-organic-clothing.com/fr/",
+  pictureSite: "https://www.picture-organic-clothing.com/fr-fr/",
+  abstral: "https://www.picture-organic-clothing.com/fr-fr/products/mvt0552-veste-de-randonnee-homme-abstral-2-5l?variant=55732473627009",
   pictureMadeIn: "https://eco.picture-organic-clothing.com/fr/made-in-france/",
   outdoorsMagic: "https://outdoorsmagic.com/article/picture-abstral-2-5l-jacket-review/",
   patagoniaPdf: "https://www.pappers.fr/entreprise/patagonia-europe-cooperatief-ua-succursale-francaise-789919719/comptes/PATAGONIA%20EUROPE%20COOPERATIEF%20U.A.%20-%20SUCCURSALE%20FRANCAISE%20-%20Comptes%20sociaux%202025%2005-05-2026.pdf",
@@ -34,7 +35,7 @@ const SRC = {
 // ---------- Produit ----------
 const PRODUCT = {
   name: "Abstral 2.5L Jacket",
-  priceTTC: { label: "Prix catalogue", value: 194.9, isEstimated: false, sourceUrl: SRC.snowleader },
+  priceTTC: { label: "Prix catalogue", value: 195, isEstimated: false, sourceUrl: SRC.abstral },
   priceRef: 195, // arrondi utilisé dans tous les calculs du dossier
   priceRetailNow: { label: "Prix constaté chez Snowleader (oct. 2026)", value: 126.9, isEstimated: false, sourceUrl: SRC.snowleader },
   colors: [
@@ -47,15 +48,16 @@ const PRODUCT = {
     { id: "c5", name: "Sable / gris / bleu", hex: "#d8d4c8", hex2: "#7f9ccc", img: "__COL_5__" },
   ],
   specs: [
-    { k: "Construction", v: "2,5 couches, coutures entièrement étanchées", src: SRC.snowleader },
-    { k: "Membrane", v: "DryPlay 20K / 20K (imperméabilité / respirabilité)", src: SRC.snowleader },
-    { k: "Tissu", v: "52 % polyester recyclé, 48 % polyester circulaire", src: SRC.snowleader },
-    { k: "Déperlant", v: "Teflon EcoElite, sans PFC", src: SRC.snowleader },
-    { k: "Poids", v: "466 g", src: SRC.snowleader },
-    { k: "Compacité", v: "Se range dans sa poche droite", src: SRC.snowleader },
-    { k: "Zips", v: "YKK pleine longueur, ventilations zippées", src: SRC.snowleader },
-    { k: "Certification", v: "Oeko-Tex Standard 100", src: SRC.snowleader },
-  ],
+    { k: "Construction", v: "2,5 couches, coutures entièrement scellées", frag: "Membrane 2.5 couches" },
+    { k: "Membrane", v: "Dryplay 20K / 20K, laminé PU, imperméable et respirante", frag: "Dryplay 20K/20K" },
+    { k: "Tissu", v: "100 % polyester circulaire", frag: "polyester circulaire" },
+    { k: "Déperlant", v: "Traitement DWR sans PFC", frag: "Traitement DWR sans PFC" },
+    { k: "Poids", v: "466 g", frag: "0.466 kg" },
+    { k: "Compacité", v: "Compressible, se range dans sa poche droite", frag: "Compressible" },
+    { k: "Zips et ventilation", v: "Zip imperméable YKK, ouvertures zippées sous les aisselles", frag: "zip imperméable YKK" },
+    { k: "Certifications", v: "Usine Lilian International (Dongguan, Chine) : Fair Wear Foundation, ISO 9001, Sedex (4P), WRAP, CQC, SGS, Accordia, GRS", url: "https://eco.picture-organic-clothing.com/fr/fournisseurs/", frag: "Vestes et pantalons ski/snow" },
+    { k: "Garantie", v: "Garantie à vie Picture", frag: "Garantie à vie Picture" },
+  ].map((s) => ({ ...s, src: (s.url || SRC.abstral) + "#:~:text=" + encodeURIComponent(s.frag).replace(/-/g, "%2D") })),
   hotspots: [
     { id: "hood", label: "Capuche réglable", text: "Capuche haute avec cordons de serrage, doublure grise.", uv: [0.333, 0.143] },
     { id: "zip", label: "Zip YKK étanche", text: "Fermeture frontale pleine longueur YKK.", uv: [0.5, 0.74] },
@@ -169,9 +171,9 @@ const ECO_CRITERIA = [
 
 const BRANDS = [
   {
-    id: "picture", name: "Picture", ring: "nous", model: "Abstral 2.5L", price: 194.9, priceSrc: SRC.snowleader,
-    eco: [2, 2, 2, 2, 2], ca: 27.1, shop: SRC.pictureSite,
-    tarifs: "Prix resserrés : l'Abstral entre 145,90 € et 194,90 € selon la version.",
+    id: "picture", name: "Picture", ring: "nous", model: "Abstral 2.5L", price: 195, priceSrc: SRC.abstral,
+    eco: [2, 2, 2, 2, 2], ca: 27.1, shop: SRC.abstral,
+    tarifs: "Abstral 2.5L à 195 € sur le site Picture ; vestes de ski de 185 à 649,90 €.",
     strategy: "Marque clermontoise de glisse et d'outdoor, éco-conception (polyester recyclé et biosourcé, sans PFC), programme Circular.",
     invest: "Voir l'onglet Coûts : 22 usines partenaires, 84 % du volume dans 2 usines.",
     fin: {
