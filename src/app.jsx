@@ -644,7 +644,7 @@ function TabCouts() {
 
   return (
     <div className="flex flex-col gap-10">
-      <Section eyebrow="Coût de revient unitaire" title={<>Une Abstral coûte environ <Est title="Coût de revient estimé" calc={{ formula: "Somme des 7 postes de coût", assumptions: ["Estimation centrale du dossier", "Fourchette prudente 30 – 50 €"], steps: COST_ITEMS.map((c) => `${c.label} : ${fmtE(c.value)}`).concat([`Total : ${fmtE(COST_TOTAL)} → arrondi 38 €`]) }}>38 €</Est> rendue en France</>}>
+      <Section eyebrow="Coût de revient unitaire" title={<>Fabriquer une Abstral et la livrer en France coûte environ <Est title="Coût de revient estimé" calc={{ formula: "Somme des 7 postes de coût", assumptions: ["Estimation centrale du dossier", "Fourchette prudente 30 – 50 €"], steps: COST_ITEMS.map((c) => `${c.label} : ${fmtE(c.value)}`).concat([`Total : ${fmtE(COST_TOTAL)} → arrondi 38 €`]) }}>38 €</Est></>}>
         <div className="grid lg:grid-cols-[360px_1fr] gap-6 items-center">
           <Panel className="p-4">
             <div className="relative h-[300px]">
@@ -675,7 +675,7 @@ function TabCouts() {
         </div>
       </Section>
 
-      <Section eyebrow="Chaîne de valeur" title="De 38 € à 195 € : qui prend quoi">
+      <Section eyebrow="Chaîne de valeur" title="De 38 € à 195 € : répartition des valeurs">
         <Panel className="p-4">
           <div className="h-[340px]">
             <ResponsiveContainer width="100%" height="100%">
