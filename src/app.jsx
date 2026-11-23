@@ -1433,6 +1433,7 @@ function App() {
   return (
     <CalcCtx.Provider value={setCalc}>
       <header className="masthead">
+        <div className="mast-bg" style={{ backgroundImage: `url(${MAST_BG})` }} aria-hidden="true" />
         <div className="wrap py-7 md:py-9 flex flex-col gap-3">
           <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight">{MAST[tab].title}</h1>
           <p className="market-intro">{MAST[tab].body}</p>

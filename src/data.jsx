@@ -5,6 +5,8 @@
 // ============================================================
 
 const JACKET_IMG = "__JACKET_IMG__";
+// Fond de l'en-tête : montagnes enneigées, reprises du site du questionnaire (prix-zeta.vercel.app)
+const MAST_BG = "__MAST_BG__";
 const JACKET_VIEWS = { v34: { img: "__V34__", aspect: 700 / 1258 }, back: { img: "__VBACK__", aspect: 700 / 866 } };
 
 const SRC = {
