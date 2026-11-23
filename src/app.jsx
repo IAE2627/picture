@@ -1217,22 +1217,25 @@ function TabQuestionnaire({ go }) {
         <p className="text-sm max-w-prose">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>.</p>
         <div className="grid lg:grid-cols-2 gap-6">
           <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse"><IntentChart /></ChartPanel>
-          <ChartPanel title="Qualité perçue, A contre B" sub="Note moyenne sur 5"><ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" /></ChartPanel>
+          <ChartPanel title="Qualité perçue, A contre B" sub="Score moyen sur 5 (moyenne des 5 items)">
+            <ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" />
+            <div className="text-sm flex flex-col gap-2 mt-1">
+              <p>Pour tester H1 sur la valeur perçue, nous avons comparé le score de qualité perçue (moyenne des 5 items, α = 0,84) entre les deux versions.</p>
+              <p>Les scores sont identiques : 3,95 en A et 3,95 en B (test t de Welch, t(99,1) = 0,02, p = 0,99, d = 0,00 ; IC à 95 % de l'écart : −0,18 à +0,18). Un test d'équivalence montre que l'effet éventuel de la promotion est inférieur à d = 0,4 (p = 0,018).</p>
+              <p>L'engagement des répondants ne modère pas cet effet (p = 0,83). Afficher une promotion n'améliore donc pas l'image de qualité de la veste, mais ne la dégrade pas non plus. <strong>H1 est rejetée pour la valeur perçue.</strong></p>
+            </div>
+          </ChartPanel>
         </div>
       </Section>
 
-      <Section eyebrow="Résultat 3" title="On achète une veste imperméable, pas une veste écologique">
-        <p className="text-sm max-w-prose">L'imperméabilité arrive en tête des critères d'achat (42 %), l'engagement écologique est cité par moins de 5 % des répondants.</p>
-      </Section>
-
-      <details className="panel p-4 text-sm">
-        <summary className="font-semibold cursor-pointer">Méthodologie détaillée</summary>
-        <dl className="grid sm:grid-cols-[220px_1fr] gap-x-4 gap-y-2 mt-3">
+      <details className="panel p-5 text-base">
+        <summary className="font-semibold text-lg cursor-pointer">Méthodologie détaillée</summary>
+        <dl className="grid sm:grid-cols-[260px_1fr] gap-x-4 gap-y-3 mt-4">
           {s.detail.map(([k, v]) => <React.Fragment key={k}><dt className="text-muted">{k}</dt><dd>{v}</dd></React.Fragment>)}
         </dl>
       </details>
 
-      <p className="text-xs text-muted max-w-prose"><strong>Limites.</strong> Échantillon jeune et étudiant (âge médian 22 ans) ; intentions déclarées, et non achats réels ; effet de la saison non testé.</p>
+      <p className="text-base max-w-prose"><strong>Limites.</strong> Échantillon jeune et étudiant (âge médian 22 ans) ; intentions déclarées, et non achats réels ; effet de la saison non testé.</p>
 
       <div className="reco items-center">
         <span className="reco-ic"><L.ArrowRight size={18} /></span>

@@ -596,8 +596,8 @@ const SURVEY = {
 
   // Intention d'achat à 195 € : effectifs Non / Probablement pas / Probablement / Oui certainement
   intent195: { levels: ["Non", "Probablement pas", "Probablement", "Oui certainement"], A: [51, 17, 4, 2], B: [30, 15, 4, 2], meanA: 1.42, meanB: 1.57, test: "t(99,6) = −1,06 ; p = 0,29" },
-  // Qualité perçue moyenne (/5) par groupe. Format : { A: 3.95, B: 3.95 }
-  qualityAB: null,
+  // Qualité perçue moyenne (/5) par groupe (moyenne des 5 items)
+  qualityAB: { A: 3.95, B: 3.95 },
   // Méthodologie détaillée (texte du dossier)
   detail: [
     ["Équilibre des groupes A / B", "Âge : t(115,3) = −0,08 ; p = 0,94. Genre : χ²(1) = 0,55 ; p = 0,46. Niveau de pratique : écart non significatif."],
