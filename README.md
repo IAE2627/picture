@@ -13,4 +13,9 @@ Ouvrir `index.html` dans un navigateur, ou activer GitHub Pages
 - `src/app.jsx` : l'application React (onglets, graphiques Recharts, vue Three.js)
 - `src/input.css` : styles (Tailwind + thème clair/sombre)
 
+## Compléter les résultats du questionnaire
+Les résultats réels sont dans `src/data.jsx`, objet `SURVEY`. Les champs à `null` (courbes Van Westendorp, Gabor-Granger, comparaison A/B, critères d’achat, méthodologie détaillée) affichent « données à compléter » tant qu’ils ne sont pas renseignés. Le format attendu est indiqué en commentaire au-dessus de chaque champ.
+
+Après modification de `src/`, reconstruire le site : `node build.js` (Node requis).
+
 `index.html` est la version compilée, autonome (React, Recharts, Lucide et Three.js chargés depuis un CDN).

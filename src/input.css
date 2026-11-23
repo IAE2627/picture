@@ -164,8 +164,6 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 8px; background: var(--forest); color: var(--on-accent); font-weight: 600; font-size: .86rem; cursor: pointer; }
 .btn:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-.example-banner { display: flex; gap: 10px; padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, var(--warn) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); color: var(--ink); }
-.example-banner svg { color: var(--warn); }
 .stat-meta { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font-size: .72rem; color: var(--muted); margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 8px; text-align: left; width: 100%; }
 .stat-meta .q { font-style: italic; flex: 1 1 200px; min-width: 0; }
 
@@ -215,3 +213,26 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .viewer::before { content: ""; position: absolute; left: 50%; top: 46%; width: 70%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%;
   background: radial-gradient(circle, rgba(255,255,255,.9) 0%, rgba(255,255,255,.35) 45%, rgba(255,255,255,0) 70%); filter: blur(8px); pointer-events: none; }
 .viewer-hint { color: #4f5855; }
+
+/* Questionnaire : graphique en attente de données réelles */
+.missing { display: flex; gap: 10px; align-items: flex-start; min-height: 160px; padding: 16px; border: 1.5px dashed var(--line); border-radius: 10px; color: var(--muted); font-size: 14px; background: var(--paper); }
+.missing svg { color: var(--warn); flex-shrink: 0; margin-top: 1px; }
+.missing strong { color: var(--ink); }
+.missing code { font-family: var(--f-mono); font-size: 12px; }
+/* Synthèse : cartes d'arguments cliquables */
+.arg-card { text-align: left; display: flex; flex-direction: column; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--forest); border-radius: 10px; color: var(--ink); cursor: pointer; transition: border-color .15s, transform .15s; }
+.arg-card:hover { border-color: var(--forest); transform: translateY(-1px); }
+.arg-card:focus-visible { outline: 2px solid var(--ocre); outline-offset: 2px; }
+/* Synthèse : plan d'action par calendrier */
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+.timeline > li { position: relative; padding-left: 22px; border-left: 2px solid var(--line); }
+.timeline > li::before { content: ""; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--ocre); box-shadow: 0 0 0 3px var(--paper); }
+.timeline-when { font-family: var(--f-display); font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; }
+
+/* Questionnaire : graphiques issus du dossier (A = vert forêt, B = ocre) */
+.stack-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.stack-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.stack-legend i { border: 1px solid color-mix(in srgb, var(--forest) 30%, var(--line)); }
+.stack-bar { display: flex; gap: 2px; height: 38px; }
+.stack-bar > span { display: grid; place-items: center; min-width: 22px; border-radius: 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; }
+.vw-points { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 4px 16px; font-size: 13px; }

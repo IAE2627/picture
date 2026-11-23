@@ -1,7 +1,7 @@
 const { useState, useEffect, useMemo, useRef, createContext, useContext, useCallback } = React;
 const {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  ReferenceLine, LineChart, Line, Legend, LabelList,
+  ReferenceLine, ReferenceArea, LineChart, Line, Legend, LabelList,
 } = Recharts;
 const L = LucideReact;
 
@@ -832,7 +832,7 @@ const SEASONS = [
     calc: { formula: "Élasticité = milieu de la fourchette retenue pour la fin de saison", assumptions: ["Dossier : en période creuse ou de soldes, la demande redevient élastique car l'achat est différable", "Fourchette hypothétique de −1,5 à −2,5"], steps: ["(−1,5 + −2,5) ÷ 2 = −2", "Une remise de 10 % ferait gagner environ 20 % de volume"] } },
 ];
 
-function TabPrix({ sim, setSim, survey }) {
+function TabPrix({ sim, setSim }) {
   const t = useTokens();
   const open = useContext(CalcCtx);
   const preset = MARGIN_PRESETS.find((p) => p.id === sim.preset);
@@ -1034,7 +1034,7 @@ function TabPrix({ sim, setSim, survey }) {
           <Panel className="p-5 flex flex-col gap-4">
             <NumInput id="bcost" label="Coût de la variation" value={B.cost} onChange={(v) => setSim({ ...sim, b: { ...B, cost: v } })} suffix="€ HT" note="Hypothèse : kit de réparation + extension de garantie." />
             <NumInput id="bacc" label="Prix accepté pour la Version B" value={B.accepted} onChange={(v) => setSim({ ...sim, b: { ...B, accepted: v } })} suffix="€ TTC"
-              note={<>Par défaut : prix maximal médian du questionnaire ({survey.isExample ? "données d'exemple" : `N = ${survey.n}`}) <button type="button" className="link-btn" onClick={() => setSim({ ...sim, b: { ...B, accepted: Math.round(survey.medTropCher) } })}>reprendre {Math.round(survey.medTropCher)} €</button></>} />
+              note={<>Par défaut : prix maximal médian du questionnaire (N = {SURVEY.n}) <button type="button" className="link-btn" onClick={() => setSim({ ...sim, b: { ...B, accepted: SURVEY.kpi.medTropCher } })}>reprendre {SURVEY.kpi.medTropCher} €</button></>} />
             <NumInput id="bceil" label="Plafond des concurrents" value={B.ceiling} onChange={(v) => setSim({ ...sim, b: { ...B, ceiling: v } })} suffix="€ TTC" note="Dossier : au-delà de 200 – 220 €, la veste affronte les 3 couches." />
           </Panel>
         </div>
@@ -1044,236 +1044,307 @@ function TabPrix({ sim, setSim, survey }) {
 }
 
 // =========================================================
-// Onglet 5 — Questionnaire
+// Onglet 5 — Questionnaire : ce que disent les clients
 // =========================================================
-function seeded(seed) { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; }
-function gauss(rnd, mu, sd) { const u = rnd() || 1e-9, v = rnd(); return mu + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
-function exampleSurvey() {
-  const rnd = seeded(42);
-  const rows = [];
-  for (let i = 0; i < 120; i++) {
-    const tb = Math.round(Math.max(60, gauss(rnd, 122, 22)) / 5) * 5;
-    const tc = Math.round(Math.max(tb + 30, gauss(rnd, 218, 32)) / 5) * 5;
-    const eco = Math.min(5, Math.max(1, Math.round(gauss(rnd, 3.8, 1))));
-    const ap = rnd() < 0.34 ? 1 : 0;
-    rows.push({ trop_bas: tb, trop_cher: tc, eco, attente_promo: ap });
-  }
-  return rows;
-}
-const median = (a) => { const s = [...a].sort((x, y) => x - y); const n = s.length; return n ? (n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2) : 0; };
-function summarize(rows, isExample) {
-  const n = rows.length;
-  const tc = rows.map((r) => r.trop_cher), tb = rows.map((r) => r.trop_bas);
-  const accept = (p) => rows.filter((r) => r.trop_bas < p && p < r.trop_cher).length / n;
-  return {
-    rows, n, isExample,
-    medTropCher: median(tc), medTropBas: median(tb),
-    pay195: rows.filter((r) => r.trop_cher > 195).length / n,
-    ecoAvg: rows.reduce((s, r) => s + r.eco, 0) / n,
-    ecoHigh: rows.filter((r) => r.eco >= 4).length / n,
-    promo: rows.filter((r) => r.attente_promo === 1).length / n,
-    accept,
-  };
-}
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/).filter(Boolean);
-  if (lines.length < 2) throw new Error("Le fichier doit contenir une ligne d'en-tête et au moins une réponse.");
-  const sep = lines[0].includes(";") ? ";" : ",";
-  const head = lines[0].split(sep).map((h) => h.trim().toLowerCase());
-  const need = ["trop_bas", "trop_cher", "eco", "attente_promo"];
-  const miss = need.filter((k) => !head.includes(k));
-  if (miss.length) throw new Error("Colonnes manquantes : " + miss.join(", ") + ".");
-  const rows = lines.slice(1).map((l) => {
-    const c = l.split(sep); const o = {};
-    need.forEach((k) => (o[k] = parseFloat(String(c[head.indexOf(k)] || "").replace(",", "."))));
-    return o;
-  }).filter((o) => need.every((k) => isFinite(o[k])));
-  if (!rows.length) throw new Error("Aucune ligne exploitable : vérifiez que les valeurs sont numériques.");
-  return rows;
-}
+const pct0 = (v) => Math.round(v * 100) + " %";
 
-function Gauge({ value, label, tone }) {
-  const t = useTokens();
-  const a = Math.PI * (1 - value);
-  const x = 60 + 48 * Math.cos(a), y = 60 - 48 * Math.sin(a);
-  const c = tone === "bad" ? t.bad : tone === "warn" ? t.warn : t.forest;
+// Bloc affiché à la place d'un graphique tant que ses données réelles manquent
+function Missing({ what, field }) {
   return (
-    <svg viewBox="0 0 120 72" className="w-full max-w-[200px]" role="img" aria-label={label + " " + Math.round(value * 100) + " %"}>
-      <path d="M12 60 A48 48 0 0 1 108 60" fill="none" stroke={t.line} strokeWidth="10" strokeLinecap="round" />
-      <path d={`M12 60 A48 48 0 0 1 ${x.toFixed(2)} ${y.toFixed(2)}`} fill="none" stroke={c} strokeWidth="10" strokeLinecap="round" />
-      <text x="60" y="58" textAnchor="middle" fontSize="18" fontWeight="700" fill={t.ink}>{Math.round(value * 100)} %</text>
-    </svg>
+    <div className="missing">
+      <L.FileQuestion size={20} aria-hidden="true" />
+      <div><strong>Données à compléter</strong> : {what}.<span className="block text-xs mt-1">À renseigner dans <code>src/data.jsx</code>, champ <code>SURVEY.{field}</code>.</span></div>
+    </div>
   );
 }
 
-function StatMeta({ q, n, onRaw }) {
+function ChartPanel({ title, sub, children }) {
   return (
-    <div className="stat-meta"><span>N = {n}</span><span className="q">« {q} »</span><button type="button" className="link-btn" onClick={onRaw}>Données brutes<L.Table size={12} /></button></div>
+    <Panel className="p-4 flex flex-col gap-2 min-w-0">
+      <div><div className="font-semibold text-sm">{title}</div>{sub && <div className="text-xs text-muted">{sub}</div>}</div>
+      {children}
+    </Panel>
   );
 }
 
-function TabQuestionnaire({ survey, setSurvey, simPrice }) {
+const Tip = ({ head, lines }) => <div className="chart-tip"><strong>{head}</strong>{lines.map((l, i) => <div key={i} className="tabular-nums">{l}</div>)}</div>;
+
+// Couleurs des versions : A = vert forêt, B = ocre (identiques dans tous les graphiques)
+const useAB = () => { const t = useTokens(); return { t, A: t.forest, B: t.ocre }; };
+const axisProps = (t) => ({ tick: { fill: t.muted, fontSize: 11 }, axisLine: { stroke: t.line }, tickLine: false });
+
+function VWChart() {
   const t = useTokens();
-  const open = useContext(CalcCtx);
-  const [err, setErr] = useState("");
-  const s = survey;
-  const raw = () => open({
-    title: `Données brutes (${s.n} réponses${s.isExample ? ", exemple" : ""})`,
-    extra: (
-      <div className="table-wrap mt-3 max-h-[50vh] overflow-y-auto">
-        <table className="data-table"><thead><tr><th>#</th><th>trop_bas</th><th>trop_cher</th><th>eco</th><th>attente_promo</th></tr></thead>
-          <tbody>{s.rows.map((r, i) => <tr key={i}><td>{i + 1}</td><td>{r.trop_bas}</td><td>{r.trop_cher}</td><td>{r.eco}</td><td>{r.attente_promo}</td></tr>)}</tbody></table>
-      </div>),
-  });
-  const curve = useMemo(() => { const a = []; for (let p = 80; p <= 320; p += 5) a.push({ p, acc: +(s.accept(p) * 100).toFixed(1) }); return a; }, [s]);
-  const best = curve.reduce((b, c) => (c.acc > b.acc ? c : b), curve[0]);
-  const ecoHist = [1, 2, 3, 4, 5].map((k) => ({ k: String(k), n: s.rows.filter((r) => r.eco === k).length }));
-  const onFile = (e) => {
-    const f = e.target.files && e.target.files[0]; if (!f) return;
-    const rd = new FileReader();
-    rd.onload = () => { try { setSurvey(summarize(parseCSV(String(rd.result)), false)); setErr(""); } catch (x) { setErr(x.message); } };
-    rd.readAsText(f);
-  };
-
+  const pts = SURVEY.vwPoints;
+  const rows = SURVEY.vw.map(([p, tbm, bm, cher, tc]) => ({ p, tbm, bm, cher, tc }));
+  const series = [
+    { k: "tbm", n: "Trop bon marché", c: t.forest, dash: "5 4" },
+    { k: "bm", n: "Bon marché", c: t.forest },
+    { k: "cher", n: "Cher", c: t.ocre },
+    { k: "tc", n: "Trop cher", c: t.ocre, dash: "5 4" },
+  ];
   return (
-    <div className="flex flex-col gap-8">
-      {s.isExample && (
-        <div className="example-banner">
-          <L.AlertTriangle size={18} className="shrink-0 mt-0.5" />
-          <div className="text-sm"><strong>Données d'exemple.</strong> Le dossier ne contient pas encore les réponses au questionnaire : les chiffres ci-dessous sont simulés (N = 120) pour montrer la restitution. Importez votre fichier CSV pour les remplacer.</div>
-        </div>
-      )}
-      <Panel className="p-4 flex flex-wrap items-center gap-4 justify-between">
-        <div className="text-sm min-w-0">
-          <div className="font-semibold">Importer les réponses (CSV)</div>
-          <div className="text-xs text-muted">Colonnes attendues : <code>trop_bas ; trop_cher ; eco ; attente_promo</code> (séparateur ; ou ,)</div>
-          {err && <div className="text-xs text-bad mt-1">{err}</div>}
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <label className="btn"><L.Upload size={15} />Choisir un fichier<input id="csv" type="file" accept=".csv,text/csv" className="sr-only" onChange={onFile} /></label>
-          {!s.isExample && <button className="btn ghost" onClick={() => setSurvey(summarize(exampleSurvey(), true))}>Revenir à l'exemple</button>}
-        </div>
-      </Panel>
+    <>
+      <div className="h-[300px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={rows} margin={{ top: 22, right: 16, left: 0, bottom: 4 }}>
+            <CartesianGrid stroke={t.line} strokeDasharray="2 4" vertical={false} />
+            <ReferenceArea x1={pts.pmc} x2={pts.pme} fill={t.sage} fillOpacity={0.18} stroke="none" />
+            <XAxis dataKey="p" type="number" domain={[0, 300]} ticks={[0, 50, 100, 150, 200, 250, 300]} tickFormatter={(v) => v + " €"} {...axisProps(t)} />
+            <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(v) => v + " %"} tick={{ fill: t.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+            <Tooltip content={({ active, payload, label }) => active && payload ? <Tip head={label + " €"} lines={payload.map((p) => p.name + " : " + p.value + " %")} /> : null} />
+            <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => <span style={{ color: t.muted }}>{v}</span>} />
+            <ReferenceLine x={195} stroke={t.bad} strokeDasharray="4 3" label={{ value: "195 €", fill: t.bad, fontSize: 11, position: "top" }} />
+            {series.map((s) => <Line key={s.k} type="stepAfter" dataKey={s.k} name={s.n} stroke={s.c} strokeWidth={2} strokeDasharray={s.dash} dot={false} isAnimationActive={false} />)}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="vw-points">
+        {[["PMC", pts.pmc, "point marginal de bon marché"], ["OPP", pts.opp, "prix optimal"], ["IPP", pts.ipp, "prix d'indifférence"], ["PME", pts.pme, "point marginal de cherté"]].map(([k, v, l]) => (
+          <div key={k}><span className="font-semibold">{k} {v} €</span><span className="text-muted"> · {l}</span></div>
+        ))}
+      </div>
+      <p className="text-xs text-muted">Bande verte : zone de prix acceptable ({pts.pmc}–{pts.pme} €). Courbes relevées sur le graphique du dossier, à ± 1 point.</p>
+    </>
+  );
+}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi label="Répondants" v={s.n} sub={s.isExample ? "exemple simulé" : "fichier importé"} />
-        <Kpi label="Prix maximal médian" v={<span className="tabular-nums">{fmtN(s.medTropCher, 0)} €</span>} sub="au-delà : trop cher" />
-        <Kpi label="Prêts à payer 195 €" v={<span className="tabular-nums">{fmtP(s.pay195, 0)}</span>} sub="prix max > 195 €" tone={s.pay195 >= 0.5 ? "good" : "bad"} />
-        <Kpi label="Attendraient une promo" v={<span className="tabular-nums">{fmtP(s.promo, 0)}</span>} sub="effet d'aubaine potentiel" tone="warn" />
+function GGChart() {
+  const t = useTokens();
+  const rows = SURVEY.gg.map((r) => ({ p: r.p + " €", raw: r.p, v: Math.round(r.buy * 100) }));
+  return (
+    <div className="h-[280px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={rows} margin={{ top: 20, right: 8, left: 0, bottom: 4 }}>
+          <CartesianGrid stroke={t.line} strokeDasharray="2 4" vertical={false} />
+          <XAxis dataKey="p" {...axisProps(t)} />
+          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(v) => v + " %"} tick={{ fill: t.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+          <Tooltip cursor={{ fill: t.surface2 }} content={({ active, payload, label }) => active && payload ? <Tip head={label} lines={[payload[0].value + " % achèteraient"]} /> : null} />
+          <Bar dataKey="v" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            {rows.map((r) => <Cell key={r.p} fill={r.raw === 195 ? t.ocre : t.sage} />)}
+            <LabelList dataKey="v" position="top" formatter={(v) => v + " %"} style={{ fill: t.ink, fontSize: 11 }} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// Barres empilées à 100 % : une rampe de vert, du « Non » (clair) au « Oui certainement » (foncé)
+function IntentChart() {
+  const d = SURVEY.intent195;
+  const shades = [18, 42, 70, 100].map((p) => `color-mix(in srgb, var(--forest) ${p}%, var(--surface))`);
+  const ink = ["var(--ink)", "var(--ink)", "var(--on-accent)", "var(--on-accent)"];
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="stack-legend">{d.levels.map((l, i) => <span key={l}><i style={{ background: shades[i] }} />{l}</span>)}</div>
+      {["A", "B"].map((g) => {
+        const n = d[g].reduce((a, b) => a + b, 0);
+        return (
+          <div key={g}>
+            <div className="text-sm font-semibold mb-1">{SURVEY.groups[g].label} <span className="text-muted font-normal">· moyenne {fmtN(d["mean" + g], 2)} / 4</span></div>
+            <div className="stack-bar">
+              {d[g].map((v, i) => (
+                <span key={i} style={{ flexGrow: v, background: shades[i], color: ink[i] }} title={`${d.levels[i]} : ${v} répondants (${Math.round((v / n) * 100)} %)`}>
+                  {v / n >= 0.15 ? `${v} (${Math.round((v / n) * 100)} %)` : v}
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+      <p className="text-xs text-muted">Intention positive (probablement + oui) : {Math.round(((d.A[2] + d.A[3]) / SURVEY.groups.A.n) * 100)} % en A, {Math.round(((d.B[2] + d.B[3]) / SURVEY.groups.B.n) * 100)} % en B. Test de Welch : {d.test}.</p>
+    </div>
+  );
+}
+
+function ABChart({ field, what, max, fmt, unit }) {
+  const { t, A, B } = useAB();
+  const d = SURVEY[field];
+  if (!d) return <Missing what={what} field={field} />;
+  const rows = ["A", "B"].map((g) => ({ g: SURVEY.groups[g].label, v: d[g] }));
+  return (
+    <div className="h-[220px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={rows} margin={{ top: 20, right: 8, left: 0, bottom: 4 }} barCategoryGap="35%">
+          <CartesianGrid stroke={t.line} strokeDasharray="2 4" vertical={false} />
+          <XAxis dataKey="g" {...axisProps(t)} />
+          <YAxis domain={[0, max]} tickFormatter={(v) => fmt(v)} tick={{ fill: t.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
+          <Tooltip cursor={{ fill: t.surface2 }} content={({ active, payload, label }) => active && payload ? <Tip head={label} lines={[fmt(payload[0].value) + unit]} /> : null} />
+          <Bar dataKey="v" radius={[4, 4, 0, 0]} isAnimationActive={false}>
+            <Cell fill={A} /><Cell fill={B} />
+            <LabelList dataKey="v" position="top" formatter={fmt} style={{ fill: t.ink, fontSize: 12, fontWeight: 600 }} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function TabQuestionnaire({ go }) {
+  const s = SURVEY, k = s.kpi;
+  return (
+    <div className="flex flex-col gap-12">
+      <div className="answer">
+        <div className="eyebrow">Ce que disent les clients</div>
+        <p className="font-display text-2xl md:text-3xl font-semibold leading-snug text-balance mt-2">La qualité est reconnue, le prix bloque, et une promotion affichée n'y change rien.</p>
       </div>
 
-      <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
-        <Panel className="p-4">
-          <div className="font-semibold text-sm">Part des répondants pour qui le prix est acceptable</div>
-          <div className="text-xs text-muted mb-2">Prix ni « trop bas » ni « trop cher ». Pic à {best.p} € ({fmtN(best.acc, 0)} %).</div>
-          <div className="h-[260px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={curve} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
-                <CartesianGrid stroke={t.line} strokeDasharray="2 4" vertical={false} />
-                <XAxis dataKey="p" type="number" domain={[80, 320]} ticks={[100, 150, 200, 250, 300]} tickFormatter={(v) => v + " €"} tick={{ fill: t.muted, fontSize: 11 }} axisLine={{ stroke: t.line }} tickLine={false} />
-                <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(v) => v + " %"} tick={{ fill: t.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
-                <Tooltip content={({ active, payload, label }) => active && payload ? <div className="chart-tip"><strong>{label} €</strong><div className="tabular-nums">{payload[0].value} % acceptent</div></div> : null} />
-                <ReferenceLine x={195} stroke={t.ocre} strokeDasharray="4 3" label={{ value: "195 €", fill: t.ocre, fontSize: 11, position: "top" }} />
-                {Math.abs(simPrice - 195) > 0.5 && <ReferenceLine x={Math.round(simPrice)} stroke={t.bad} strokeDasharray="2 3" label={{ value: "simulé", fill: t.bad, fontSize: 11, position: "insideTopLeft" }} />}
-                <Line type="monotone" dataKey="acc" stroke={t.forest} strokeWidth={2.5} dot={false} isAnimationActive={false} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <StatMeta q={SURVEY_Q.trop_bas + " / " + SURVEY_Q.trop_cher} n={s.n} onRaw={raw} />
+      <div className="grid lg:grid-cols-[1fr_1.6fr] gap-6 items-start">
+        <Panel className="p-5 flex flex-col gap-2 text-sm">
+          <div className="eyebrow">Méthode</div>
+          <p><strong>{s.n} répondants</strong>, répartis au hasard entre <strong>A</strong> ({s.groups.A.desc}, n = {s.groups.A.n}) et <strong>B</strong> ({s.groups.B.desc}, n = {s.groups.B.n}).</p>
+          <p className="text-muted">Mesures : {s.measures}.</p>
+          <p className="text-muted">Groupes comparables, promotion bien perçue ({s.tests.manip}).</p>
         </Panel>
-        <Panel className="p-4 flex flex-col gap-3">
-          <div className="font-semibold text-sm">Importance des engagements écologiques</div>
-          <div className="h-[170px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ecoHist} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
-                <XAxis dataKey="k" tick={{ fill: t.muted, fontSize: 11 }} axisLine={{ stroke: t.line }} tickLine={false} />
-                <YAxis hide />
-                <Bar dataKey="n" fill={t.sage} radius={[3, 3, 0, 0]} isAnimationActive={false}><LabelList dataKey="n" position="top" style={{ fill: t.ink, fontSize: 11 }} /></Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="text-xs text-muted">Note de 1 (aucune) à 5 (déterminante). Moyenne {fmtN(s.ecoAvg, 1)}.</div>
-          <StatMeta q={SURVEY_Q.eco} n={s.n} onRaw={raw} />
-        </Panel>
+        <div className="grid grid-cols-2 gap-4">
+          <Kpi label="Qualité perçue" v={<>{fmtN(k.quality, 2)}<span className="text-base text-muted">/5</span></>} sub="la veste convainc" tone="good" />
+          <Kpi label="Achèteraient à 195 €" v={pct0(k.buy195)} sub="intention d'achat" tone="bad" />
+          <Kpi label="« Trop cher » médian" v={k.medTropCher + " €"} sub="sous le prix de 195 €" tone="bad" />
+          <Kpi label="Zone acceptable" v={k.zoneLo + "–" + k.zoneHi + " €"} sub="Van Westendorp" tone="warn" />
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-6">
-        <Panel className="p-4 flex flex-col items-center gap-2 text-center">
-          <div className="font-semibold text-sm">Sensibilité au prix</div>
-          <Gauge value={1 - s.pay195} tone={1 - s.pay195 > 0.5 ? "bad" : "warn"} label="Sensibilité" />
-          <div className="text-xs text-muted">Part des répondants pour qui 195 € est trop cher</div>
-          <StatMeta q={SURVEY_Q.trop_cher} n={s.n} onRaw={raw} />
-        </Panel>
-        <Panel className="p-4 flex flex-col items-center gap-2 text-center">
-          <div className="font-semibold text-sm">Adhésion aux valeurs écoresponsables</div>
-          <Gauge value={s.ecoHigh} label="Adhésion" />
-          <div className="text-xs text-muted">Part notant 4 ou 5 l'importance de l'écologie</div>
-          <StatMeta q={SURVEY_Q.eco} n={s.n} onRaw={raw} />
-        </Panel>
+      <Section eyebrow="Résultat 1" title="Le prix est le frein">
+        <p className="text-sm max-w-prose">La moitié des répondants juge la veste trop chère dès {k.medTropCher} €, et seuls {pct0(k.buy195)} l'achèteraient à 195 € : le prix actuel se situe bien au-dessus de la zone jugée acceptable ({k.zoneLo}–{k.zoneHi} €).</p>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <ChartPanel title="Prix acceptables (Van Westendorp)" sub="Part des répondants pour qui chaque prix est trop bon marché, bon marché, cher ou trop cher"><VWChart /></ChartPanel>
+          <ChartPanel title="Intention d'achat par prix (Gabor-Granger)" sub="Part des 125 répondants qui achèteraient à chaque prix"><GGChart /></ChartPanel>
+        </div>
+      </Section>
+
+      <Section eyebrow="Résultat 2" title="La promotion affichée n'a aucun effet">
+        <p className="text-sm max-w-prose">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>.</p>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse"><IntentChart /></ChartPanel>
+          <ChartPanel title="Qualité perçue, A contre B" sub="Note moyenne sur 5"><ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" /></ChartPanel>
+        </div>
+      </Section>
+
+      <Section eyebrow="Résultat 3" title="On achète une veste imperméable, pas une veste écologique">
+        <p className="text-sm max-w-prose">L'imperméabilité arrive en tête des critères d'achat (42 %), l'engagement écologique est cité par moins de 5 % des répondants.</p>
+      </Section>
+
+      <details className="panel p-4 text-sm">
+        <summary className="font-semibold cursor-pointer">Méthodologie détaillée</summary>
+        <dl className="grid sm:grid-cols-[220px_1fr] gap-x-4 gap-y-2 mt-3">
+          {s.detail.map(([k, v]) => <React.Fragment key={k}><dt className="text-muted">{k}</dt><dd>{v}</dd></React.Fragment>)}
+        </dl>
+      </details>
+
+      <p className="text-xs text-muted max-w-prose"><strong>Limites.</strong> Échantillon jeune et étudiant (âge médian 22 ans) ; intentions déclarées, et non achats réels ; effet de la saison non testé.</p>
+
+      <div className="reco items-center">
+        <span className="reco-ic"><L.ArrowRight size={18} /></span>
+        <div className="flex-1 text-sm">Ces résultats rejoignent l'analyse économique et financière.</div>
+        <button className="btn" onClick={() => go("synthese")}>Voir la Synthèse →</button>
       </div>
     </div>
   );
 }
 
 // =========================================================
-// Onglet 6 — Synthèse
+// Onglet 6 — Synthèse : la décision
 // =========================================================
-function TabSynthese() {
+function TabSynthese({ go }) {
   const m = MARGIN_PRESETS[0].m;
   const rows = [10, 15, 20, 30].map((d) => ({ ...simulate(-d / 100, m, -0.65), pct: d, lo: simulate(-d / 100, m, -0.5), hi: simulate(-d / 100, m, -0.8) }));
   const r15 = rows[1];
+  const jump = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const args = [
+    { id: "syn-eco", h: "Économique", ic: <L.Calculator size={18} />, p: <>−15 % exige <strong>+{fmtP(r15.req, 0)}</strong> de volume ; on attend +8 à +12 %.</> },
+    { id: "syn-fin", h: "Financier", ic: <L.Landmark size={18} />, p: <>Capitaux propres négatifs, <strong>1,18 M€</strong> de trésorerie.</> },
+    { id: "syn-cli", h: "Clients", ic: <L.Users size={18} />, p: <>La promotion ne fait <strong>ni acheter ni mieux percevoir</strong>.</> },
+  ];
+  const plan = [
+    { when: "Nov.–déc.", items: [
+      ["Tenir 195 €", "Juste sous la barre psychologique des 200 €, dans la zone 180–200 € des 2,5 couches éco-conçues.", <L.Lock size={18} />],
+      ["Communiquer sur la technicité", "Membrane 20K/20K, sans PFC : c'est l'imperméabilité qui fait acheter.", <L.Droplets size={18} />],
+      ["Offres groupées", "Abstral + pantalon ou sous-couche : la remise porte sur le panier, pas sur la veste phare.", <L.Package size={18} />],
+      ["Avantages réservés aux membres", "Programme Circular, reprise d'une ancienne veste : récompenser la fidélité sans casser le prix public.", <L.BadgeCheck size={18} />],
+    ] },
+    { when: "Avant la saison", items: [
+      ["Encadrer les démarques des revendeurs", "Le prix constaté à −35 % chez un revendeur majeur dégrade la valeur perçue : revoir les conditions de démarque avec les distributeurs.", <L.Handshake size={18} />],
+    ] },
+    { when: "Janv.–févr.", items: [
+      ["Remiser les invendus de 10 à 15 %", "Après le pic, la demande redevient élastique (≈ −2) : la remise devient défendable et libère de la trésorerie.", <L.CalendarClock size={18} />],
+    ] },
+  ];
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-12">
       <div className="answer">
         <div className="eyebrow">Réponse à la problématique</div>
-        <p className="font-display text-2xl md:text-3xl font-semibold leading-snug text-balance mt-2">
-          Non. Une promotion avant le pic hivernal détruirait de la marge : à −15 %, il faudrait vendre{" "}
-          <Est title="Volume d'équilibre à −15 %" calc={{ formula: "ΔQ/Q = r ÷ (m − r)", assumptions: ["m = 45,8 % (marge brute Picture 2026)", "r = 15 %"], steps: ["15 ÷ (45,8 − 15) = 15 ÷ 30,8 = 48,7 %"] }}>+{fmtP(r15.req, 0)}</Est>{" "}
-          de vestes pour compenser, alors que la demande d'avant-saison n'en apporterait que{" "}
-          <Est title="Volume attendu à −15 %" calc={{ formula: "ΔQ/Q = −e × r", assumptions: ["Élasticité pré-saison −0,5 à −0,8 (dossier)"], steps: ["0,5 × 15 % = 7,5 %", "0,8 × 15 % = 12 %"] }}>+8 à +12 %</Est>.
-        </p>
+        <p className="font-display text-2xl md:text-3xl font-semibold leading-snug text-balance mt-2">Non : pas de promotion sur l'Abstral avant ni pendant l'hiver.</p>
       </div>
 
-      <div className="table-wrap">
-        <table className="data-table">
-          <thead><tr><th>Remise</th><th className="text-right">Volume nécessaire</th><th className="text-right">Volume attendu (pré-saison)</th><th className="text-right">Marge totale</th><th className="text-right">Élasticité requise</th></tr></thead>
-          <tbody>{rows.map((r) => (
-            <tr key={r.pct}>
-              <td className="font-semibold">−{r.pct} %</td>
-              <td className="text-right tabular-nums text-bad font-semibold">+{fmtP(r.req, 0)}</td>
-              <td className="text-right tabular-nums">+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</td>
-              <td className="text-right tabular-nums">{fmtP(r.lo.dM, 0)} à {fmtP(r.hi.dM, 0)}</td>
-              <td className="text-right tabular-nums">{fmtN(r.beE, 1)}</td>
-            </tr>))}</tbody>
-        </table>
-        <p className="text-xs text-muted mt-2 px-1">Base : marge brute Picture 2026 de 45,8 % (<Src href={SRC.pappersPicture}>Pappers</Src>). Avec la marge en vente directe (76,6 %), une remise de 15 % demande encore +24 % de volume, pour +8 à +12 % attendus.</p>
+      <div className="grid md:grid-cols-3 gap-4">
+        {args.map((a) => (
+          <button key={a.id} type="button" className="arg-card" onClick={() => jump(a.id)}>
+            <span className="flex items-center gap-2 font-semibold"><span className="reco-ic">{a.ic}</span>{a.h}</span>
+            <span className="text-sm mt-2 block">{a.p}</span>
+            <span className="text-xs text-muted mt-3 flex items-center gap-1">Voir le détail<L.ArrowDown size={12} /></span>
+          </button>
+        ))}
       </div>
 
-      <Section eyebrow="Analyse des risques" title="Pourquoi la haute saison est le pire moment pour remiser">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Risk icon={<L.TrendingDown size={18} />} title="Demande inélastique">À l'approche de l'hiver, le besoin est immédiat. La baisse de prix profite surtout à des clients qui auraient acheté de toute façon (effet d'aubaine).</Risk>
-          <Risk icon={<L.ShieldAlert size={18} />} title="Valeur perçue">Sur le haut de gamme technique, 160 € fait douter de la membrane et de la durabilité. La Torrentshell 3L est à 200 €, seulement 5 € de plus.</Risk>
-          <Risk icon={<L.Landmark size={18} />} title="Bilan sans coussin">Résultat net <Src href={SRC.pappersPicture}>−2,63 M€</Src>, capitaux propres <Src href={SRC.pappersPicture}>−1,3 M€</Src>, trésorerie <Src href={SRC.pappersPicture}>1,18 M€</Src> : Picture ne peut pas financer une baisse de marge.</Risk>
-          <Risk icon={<L.Tag size={18} />} title="Remises déjà en rayon">L'Abstral est déjà à <Src href={SRC.snowleader}>126,90 € chez Snowleader</Src> (−35 %). Une promo de marque s'ajouterait à celles des revendeurs.</Risk>
+      <div id="syn-eco" className="scroll-mt-24">
+        <Section eyebrow="Argument économique" title={`Une remise de 15 % exige +${fmtP(r15.req, 0)} de volume, la demande n'en apporte que +8 à +12 %`}>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Remise</th><th className="text-right">Volume nécessaire</th><th className="text-right">Volume attendu (pré-saison)</th><th className="text-right">Marge totale</th><th className="text-right">Élasticité requise</th></tr></thead>
+              <tbody>{rows.map((r) => (
+                <tr key={r.pct}>
+                  <td className="font-semibold">−{r.pct} %</td>
+                  <td className="text-right tabular-nums text-bad font-semibold">{r.pct === 15 ? <Est title="Volume d'équilibre à −15 %" calc={{ formula: "ΔQ/Q = r ÷ (m − r)", assumptions: ["m = 45,8 % (marge brute Picture 2026)", "r = 15 %"], steps: ["15 ÷ (45,8 − 15) = 15 ÷ 30,8 = 48,7 %"] }}>+{fmtP(r.req, 0)}</Est> : <>+{fmtP(r.req, 0)}</>}</td>
+                  <td className="text-right tabular-nums">{r.pct === 15 ? <Est title="Volume attendu à −15 %" calc={{ formula: "ΔQ/Q = −e × r", assumptions: ["Élasticité pré-saison −0,5 à −0,8 (dossier)"], steps: ["0,5 × 15 % = 7,5 %", "0,8 × 15 % = 12 %"] }}>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</Est> : <>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</>}</td>
+                  <td className="text-right tabular-nums">{fmtP(r.lo.dM, 0)} à {fmtP(r.hi.dM, 0)}</td>
+                  <td className="text-right tabular-nums">{fmtN(r.beE, 1)}</td>
+                </tr>))}</tbody>
+            </table>
+            <p className="text-xs text-muted mt-2 px-1">Base : marge brute Picture 2026 de 45,8 % (<Src href={SRC.pappersPicture}>Pappers</Src>). Avec la marge en vente directe (76,6 %), une remise de 15 % demande encore +24 % de volume, pour +8 à +12 % attendus.</p>
+          </div>
+        </Section>
+      </div>
+
+      <div id="syn-fin" className="scroll-mt-24"><FinCompare /></div>
+
+      <div id="syn-cli" className="scroll-mt-24">
+        <Section eyebrow="Argument clients" title="Les clients ne réagissent pas à la promotion">
+          <div className="reco items-center">
+            <span className="reco-ic"><L.ClipboardList size={18} /></span>
+            <p className="flex-1 text-sm">La qualité de la veste est reconnue, mais c'est le prix qui freine l'achat. Afficher une promotion ne change ni l'intention d'achat ni l'image du produit.</p>
+            <button className="btn ghost" onClick={() => go("questionnaire")}>Voir le Questionnaire →</button>
+          </div>
+        </Section>
+      </div>
+
+      <Section eyebrow="Analyse des risques" title="L'hiver est le pire moment pour remiser">
+        <div className="grid md:grid-cols-3 gap-4">
+          <Risk icon={<L.TrendingDown size={18} />} title="La demande est peu sensible au prix">À l'approche de l'hiver, le besoin est immédiat. La baisse de prix profite surtout à des clients qui auraient acheté de toute façon (effet d'aubaine).</Risk>
+          <Risk icon={<L.ShieldAlert size={18} />} title="La promotion ne crée pas de valeur">Le questionnaire le montre : une promotion affichée ne change pas la valeur perçue de la veste. La remise ne ferait que céder de la marge.</Risk>
+          <Risk icon={<L.Tag size={18} />} title="Les revendeurs remisent déjà">L'Abstral est déjà à <Src href={SRC.snowleader}>126,90 € chez Snowleader</Src> (−35 %). Une promotion de marque s'ajouterait à celles des revendeurs.</Risk>
         </div>
       </Section>
 
-      <FinCompare />
-
-      <Section eyebrow="Recommandations managériales" title="Tenir 195 € en novembre-décembre, et créer de la valeur autrement">
-        <div className="grid md:grid-cols-2 gap-4">
-          {[
-            ["Maintenir le prix plein jusqu'à fin décembre", "195 € est juste sous la barre psychologique des 200 € et dans la zone 180 – 200 € des 2,5 couches éco-conçues. Communiquer sur la technicité (20K/20K, sans PFC) plutôt que sur le prix.", <L.Lock size={18} />],
-            ["Offre groupée « bundle »", "Abstral + pantalon ou sous-couche à prix d'ensemble : la remise porte sur le panier, pas sur la veste phare, et augmente le panier moyen.", <L.Package size={18} />],
-            ["Valoriser garantie et réparabilité", "Version B : kit de réparation et extension de garantie. Le comparateur montre qu'une variation à 6 € qui fait accepter un prix plus élevé améliore la marge sans toucher au prix affiché.", <L.Wrench size={18} />],
-            ["Promotions réservées et ciblées", "Avantage réservé aux membres (programme Circular, reprise d'une ancienne veste) : on récompense la fidélité sans casser le prix public.", <L.Users size={18} />],
-            ["Remiser les invendus après le pic", "En janvier-février, la demande redevient élastique (≈ −2) : une remise de 10 – 15 % sur le stock restant devient défendable et libère de la trésorerie.", <L.CalendarClock size={18} />],
-            ["Encadrer les revendeurs", "Le prix constaté à −35 % chez un revendeur majeur dégrade la valeur perçue. Revoir les conditions de démarque avec les distributeurs avant la saison.", <L.Handshake size={18} />],
-          ].map(([h, p, ic]) => (
-            <div key={h} className="reco"><span className="reco-ic">{ic}</span><div><div className="font-semibold">{h}</div><p className="text-sm text-muted mt-1">{p}</p></div></div>
+      <Section eyebrow="Recommandations" title="Tenir 195 € pendant la saison, remiser après">
+        <ol className="timeline">
+          {plan.map((step) => (
+            <li key={step.when}>
+              <div className="timeline-when">{step.when}</div>
+              <div className="grid md:grid-cols-2 gap-3">
+                {step.items.map(([h, p, ic]) => (
+                  <div key={h} className="reco"><span className="reco-ic">{ic}</span><div><div className="font-semibold">{h}</div><p className="text-sm text-muted mt-1">{p}</p></div></div>
+                ))}
+              </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </Section>
+
+      <div className="answer">
+        <div className="eyebrow">Le mot de la fin</div>
+        <p className="font-display text-xl md:text-2xl font-semibold leading-snug text-balance mt-2">Tenir le prix en saison, remiser après : protéger la marge quand la demande est là, libérer la trésorerie quand elle retombe.</p>
+      </div>
     </div>
   );
 }
@@ -1352,9 +1423,7 @@ function App() {
   const initial = (() => { const h = (location.hash || "").replace("#", ""); return TABS.some((t) => t.id === h) ? h : "presentation"; })();
   const [tab, setTab] = useState(initial);
   const [calc, setCalc] = useState(null);
-  const [sim, setSim] = useState({ r: -15, preset: "compta", e: -0.65, q0: 2000, b: { cost: 6, accepted: 210, ceiling: 220 } });
-  const [survey, setSurvey] = useState(() => summarize(exampleSurvey(), true));
-  useEffect(() => { setSim((s) => ({ ...s, b: { ...s.b, accepted: Math.round(survey.medTropCher) } })); }, [survey]);
+  const [sim, setSim] = useState({ r: -15, preset: "compta", e: -0.65, q0: 2000, b: { cost: 6, accepted: SURVEY.kpi.medTropCher, ceiling: 220 } });
   const go = (id) => { setTab(id); try { history.replaceState(null, "", "#" + id); } catch (e) {} window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" }); };
   useEffect(() => { const f = () => { const h = location.hash.replace("#", ""); if (TABS.some((t) => t.id === h)) setTab(h); }; window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
 
@@ -1388,9 +1457,9 @@ function App() {
         {tab === "presentation" && <TabPresentation />}
         {tab === "concurrence" && <TabConcurrence />}
         {tab === "couts" && <TabCouts />}
-        {tab === "prix" && <TabPrix sim={sim} setSim={setSim} survey={survey} />}
-        {tab === "questionnaire" && <TabQuestionnaire survey={survey} setSurvey={setSurvey} simPrice={PRODUCT.priceRef * (1 + sim.r / 100)} />}
-        {tab === "synthese" && <TabSynthese />}
+        {tab === "prix" && <TabPrix sim={sim} setSim={setSim} />}
+        {tab === "questionnaire" && <TabQuestionnaire go={go} />}
+        {tab === "synthese" && <TabSynthese go={go} />}
         <div className="flex justify-between gap-3 mt-12 pt-6 border-t border-line">
           {TABS.findIndex((x) => x.id === tab) > 0 ? <button className="btn ghost" onClick={() => go(TABS[TABS.findIndex((x) => x.id === tab) - 1].id)}>← {TABS[TABS.findIndex((x) => x.id === tab) - 1].label}</button> : <span />}
           {TABS.findIndex((x) => x.id === tab) < TABS.length - 1 && <button className="btn" onClick={() => go(TABS[TABS.findIndex((x) => x.id === tab) + 1].id)}>{TABS[TABS.findIndex((x) => x.id === tab) + 1].label} →</button>}

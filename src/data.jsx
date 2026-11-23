@@ -573,10 +573,38 @@ const BRANDS = [
 
 const RING_LABEL = { nous: "Picture", direct: "Concurrents directs", indirect: "Concurrents indirects", oublie: "Ceux qu'on oublie", hors: "Hors périmètre" };
 
-// Questions de l'enquête (libellés exacts proposés)
-const SURVEY_Q = {
-  trop_bas: "À partir de quel prix trouveriez-vous cette veste si bon marché que vous douteriez de sa qualité ?",
-  trop_cher: "À partir de quel prix trouveriez-vous cette veste trop chère pour l'acheter ?",
-  eco: "Quelle importance accordez-vous aux engagements écologiques d'une marque (1 = aucune, 5 = déterminante) ?",
-  attente_promo: "Attendriez-vous une promotion pour acheter cette veste ? (1 = oui, 0 = non)",
+// Résultats réels du questionnaire (N = 125, split-test A/B)
+// Source : « Prix et budget – Picture » (analyse du questionnaire, PDF).
+// Les champs à null n'existent pas encore dans le dossier : le graphique correspondant
+// affiche « données à compléter ». Ne jamais y mettre de valeurs simulées.
+const SURVEY = {
+  n: 125,
+  groups: {
+    A: { label: "Version A", desc: "prix affiché 195 €", n: 74 },
+    B: { label: "Version B", desc: "249 € barré, 195 €", n: 51 },
+  },
+  measures: "prix acceptables (Van Westendorp), intention d'achat (Gabor-Granger), qualité perçue, engagement",
+  kpi: { quality: 3.95, buy195: 0.10, medTropCher: 180, zoneLo: 100, zoneHi: 130 },
+  tests: { manip: "p < 0,001", intent: "p = 0,29", quality: "p = 0,99" },
+
+  // Van Westendorp, toutes versions : part cumulée (%) par prix, lue sur la courbe du dossier
+  // (pas de 5 €, précision ± 1 point). Colonnes : [prix, trop bon marché, bon marché, cher, trop cher]
+  vw: [[0,100,100,0,0],[5,100,100,0,0],[10,99,99,0,0],[15,97,99,0,0],[20,92,99,0,0],[25,92,99,0,0],[30,83,99,0,0],[35,83,99,0,0],[40,72,97,0,0],[45,69,97,0,0],[50,69,94,0,0],[55,49,94,0,0],[60,40,90,1,0],[65,38,89,1,0],[70,34,89,3,0],[75,30,83,3,0],[80,22,75,8,1],[85,21,74,8,1],[90,14,61,11,2],[95,14,58,14,3],[100,6,36,18,10],[105,6,35,18,10],[110,4,33,25,11],[115,4,32,26,11],[120,3,19,34,14],[125,2,18,36,14],[130,2,14,40,16],[135,2,14,41,16],[140,2,12,46,18],[145,2,11,49,19],[150,2,2,70,36],[155,2,2,70,36],[160,2,2,74,39],[165,2,2,75,39],[170,2,2,78,44],[175,2,2,82,45],[180,1,1,82,52],[185,1,1,82,52],[190,1,1,82,54],[195,1,1,87,56],[200,0,0,94,81],[205,0,0,94,81],[210,0,0,94,81],[215,0,0,94,81],[220,0,0,96,83],[225,0,0,96,83],[230,0,0,96,84],[235,0,0,96,84],[240,0,0,96,85],[245,0,0,96,86],[250,0,0,99,92],[255,0,0,99,92],[260,0,0,99,92],[265,0,0,99,92],[270,0,0,99,92],[275,0,0,99,92],[280,0,0,99,92],[285,0,0,99,92],[290,0,0,99,92],[295,0,0,99,92],[300,0,0,99,92]],
+  vwPoints: { pmc: 100, opp: 100, ipp: 120, pme: 130 },
+  // Gabor-Granger, 125 répondants : part qui achèterait à chaque prix
+  gg: [{ p: 99, buy: 0.90 }, { p: 129, buy: 0.70 }, { p: 179, buy: 0.24 }, { p: 195, buy: 0.10 }, { p: 239, buy: 0.03 }, { p: 259, buy: 0.02 }],
+
+  // Intention d'achat à 195 € : effectifs Non / Probablement pas / Probablement / Oui certainement
+  intent195: { levels: ["Non", "Probablement pas", "Probablement", "Oui certainement"], A: [51, 17, 4, 2], B: [30, 15, 4, 2], meanA: 1.42, meanB: 1.57, test: "t(99,6) = −1,06 ; p = 0,29" },
+  // Qualité perçue moyenne (/5) par groupe. Format : { A: 3.95, B: 3.95 }
+  qualityAB: null,
+  // Méthodologie détaillée (texte du dossier)
+  detail: [
+    ["Équilibre des groupes A / B", "Âge : t(115,3) = −0,08 ; p = 0,94. Genre : χ²(1) = 0,55 ; p = 0,46. Niveau de pratique : écart non significatif."],
+    ["Perception de la promotion", "Note de promotion 2,08 (A) contre 4,31 (B) sur 5 ; t(118,7) = −14,33 ; p < 0,001 ; d = 2,23."],
+    ["Fiabilité (alpha de Cronbach)", "Qualité perçue 0,86 ; engagement 0,91 (seuil 0,70). Fiabilité composite identique."],
+    ["Validité", "AVE 0,56 et 0,67 (seuil 0,50) ; HTMT 0,16 (maximum 0,85)."],
+    ["Analyse factorielle confirmatoire", "χ²(34) = 46,9 (p = 0,07) ; CFI 0,977 ; TLI 0,969 ; RMSEA 0,062 ; SRMR 0,053. Poids de 0,59 à 0,91."],
+    ["Effet sur l'intention / la qualité", "p = 0,29 / p = 0,99"],
+  ],
 };
