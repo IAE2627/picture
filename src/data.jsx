@@ -162,6 +162,29 @@ const PRICE_HT = 162.5;
 const COEF_RETAIL = 2.1;
 const WHOLESALE_HT = +(PRICE_HT / COEF_RETAIL).toFixed(2); // 77,38
 
+// Marges brutes et résultats nets réels (comptes de l'exercice clos le 31/03/2026).
+// Les marges nettes sont calculées à partir des montants publiés, non arrondis :
+// Picture −2 634 978 € / 27 121 607 € = −9,715 % ; boutiques (Store 1 + Store 2)
+// (−137 468 − 159 434) / (347 476 + 409 946) = −39,20 %.
+const comptes2026 = {
+  picture: { resultatNet: -2634978, ca: 27121607 },
+  boutiques: { resultatNet: -137468 - 159434, ca: 347476 + 409946 },
+};
+const chaineValeur = {
+  coutRevient: 38.00,
+  margePicture: 39.38, prixGrosHT: 77.38,
+  margeMagasin: 85.12, prixPublicHT: 162.50,
+  tva: 32.50, prixPublicTTC: 195.00,
+  margeNettePicture: comptes2026.picture.resultatNet / comptes2026.picture.ca,       // ≈ −0,097
+  margeNetteBoutiques: comptes2026.boutiques.resultatNet / comptes2026.boutiques.ca, // ≈ −0,392
+};
+// perte = prix de vente × marge nette ; frais = marge brute − perte (arrondis à 2 décimales)
+const r2 = (v) => Math.round(v * 100) / 100;
+chaineValeur.pertePicture = r2(chaineValeur.prixGrosHT * chaineValeur.margeNettePicture);       // −7,52
+chaineValeur.fraisPicture = r2(chaineValeur.margePicture - chaineValeur.pertePicture);          // 46,90
+chaineValeur.perteBoutiques = r2(chaineValeur.prixPublicHT * chaineValeur.margeNetteBoutiques); // −63,70
+chaineValeur.fraisBoutiques = r2(chaineValeur.margeMagasin - chaineValeur.perteBoutiques);      // 148,82
+
 // ---------- Concurrents ----------
 // eco : grille 5 critères notés 0/1/2 → /10 (estimation interne)
 const ECO_CRITERIA = [

@@ -674,6 +674,50 @@ function TabConcurrence() {
 // =========================================================
 // Onglet 3 — Coûts
 // =========================================================
+// ---------- Chaîne de valeur : libellés et segment de perte ----------
+const eurNeg = (v) => "−" + fmtE(Math.abs(v));
+const pctNeg = (v) => "−" + fmtN(Math.abs(v) * 100, 1) + " %";
+function useNarrow(q = "(max-width: 640px)") {
+  const [n, setN] = useState(() => window.matchMedia(q).matches);
+  useEffect(() => { const m = window.matchMedia(q); const f = () => setN(m.matches); m.addEventListener ? m.addEventListener("change", f) : m.addListener(f); return () => (m.removeEventListener ? m.removeEventListener("change", f) : m.removeListener(f)); }, [q]);
+  return n;
+}
+// Valeur au-dessus des barres ; pour les marges, « marge x € » à l'intérieur de la partie pleine
+function WfValueLabel({ x, y, width, height, value, row, narrow }) {
+  const cx = x + width / 2, fs = narrow ? 9 : 11;
+  if (row.kind === "margin") {
+    const two = narrow || width < 84;
+    return (
+      <text x={cx} y={y + height / 2} textAnchor="middle" dominantBaseline="central" fill="var(--on-accent)" fontSize={fs} fontWeight={600} pointerEvents="none">
+        {two ? <><tspan x={cx} dy="-0.6em">marge</tspan><tspan x={cx} dy="1.2em">{narrow ? fmtN(value, 2) : fmtE(value)}</tspan></> : "marge " + fmtE(value)}
+      </text>
+    );
+  }
+  return <text x={cx} y={y - 6} textAnchor="middle" fill="var(--ink)" fontSize={fs} fontWeight={600}>{fmtN(value, 2) + (narrow ? "" : " €")}</text>;
+}
+// Segment hachuré des frais non couverts, trait pointillé au prix de vente, libellés « frais » et « perte »
+function LossShape({ x, y, width, height, payload, narrow }) {
+  if (!payload || !payload.loss) return null;
+  const cx = x + width / 2, base = y + height, fs = narrow ? 9 : 11;
+  const perte = eurNeg(payload.perte), frais = "frais " + fmtE(payload.frais);
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} fill="url(#wf-hatch)" stroke="var(--loss)" strokeWidth={1.5} />
+      <line x1={x - 6} x2={x + width + 6} y1={base} y2={base} stroke="var(--ink)" strokeWidth={1.5} strokeDasharray="4 3" />
+      {narrow ? (
+        <text x={cx} y={y - 6} textAnchor="middle" fontSize={fs} fontWeight={600} pointerEvents="none">
+          <tspan x={cx} dy="-3.6em" fill="var(--loss)">perte</tspan><tspan x={cx} dy="1.2em" fill="var(--loss)">{"−" + fmtN(Math.abs(payload.perte), 2)}</tspan><tspan x={cx} dy="1.2em" fill="var(--ink)">frais</tspan><tspan x={cx} dy="1.2em" fill="var(--ink)">{fmtN(payload.frais, 2)}</tspan>
+        </text>
+      ) : (
+        <>
+          <text x={cx} y={y - 6} textAnchor="middle" fill="var(--ink)" fontSize={fs} fontWeight={600} pointerEvents="none">{frais}</text>
+          <text x={payload.lossSide === "left" ? x - 10 : x + width + 10} y={y + height / 2} textAnchor={payload.lossSide === "left" ? "end" : "start"} dominantBaseline="central" fill="var(--loss)" fontSize={fs} fontWeight={700} pointerEvents="none">perte {perte}</text>
+        </>
+      )}
+    </g>
+  );
+}
+
 function TabCouts() {
   const t = useTokens();
   const open = useContext(CalcCtx);
@@ -682,14 +726,18 @@ function TabCouts() {
   const data = COST_ITEMS.map((c, i) => ({ ...c, fill: pal[i % pal.length] }));
   const openItem = (c) => open({ title: `${c.label} : ${fmtE(c.value)}`, ...c.calc, extra: <p className="text-xs text-muted mt-4">Fourchette plausible : {c.range}</p> });
 
+  const cv = chaineValeur;
+  const narrow = useNarrow();
   const brandMargin = WHOLESALE_HT - COST_REF;
   const retailMargin = PRICE_HT - WHOLESALE_HT;
   const tva = PRODUCT.priceRef - PRICE_HT;
   const wf = [
     { name: "Coût de revient", base: 0, val: COST_REF, kind: "cost", calc: { formula: "Coût sortie d'usine + transport + douane", assumptions: ["Estimation centrale du dossier, arrondie"], steps: [`Sortie d'usine : 17 + 8 + 3 + 4 + 1 = 33 €`, `Import : 2,50 + 2 = 4,50 €`, `Total : 37,50 € → arrondi à 38 €`] } },
-    { name: "Marge Picture", base: COST_REF, val: brandMargin, kind: "margin", calc: { formula: "Prix de gros HT − coût de revient", assumptions: ["Coefficient de marque implicite = prix de gros ÷ coût"], steps: [`${fmtE(WHOLESALE_HT)} − 38,00 € = ${fmtE(brandMargin)}`, `Coefficient : ${fmtE(WHOLESALE_HT)} ÷ 38 = ${fmtN(WHOLESALE_HT / COST_REF, 2)}`, `Doit couvrir conception, salaires, marketing, frais généraux de Picture`] } },
+    { name: "Picture : frais", base: COST_REF, val: brandMargin, loss: -cv.pertePicture, frais: cv.fraisPicture, perte: cv.pertePicture, lossSide: "left",
+      tip: <>Marge brute {fmtE(cv.margePicture)} (coefficient ×{fmtN(cv.prixGrosHT / cv.coutRevient, 2)}, estimé) · Frais {fmtE(cv.fraisPicture)} · Résultat net {eurNeg(cv.pertePicture)} par veste ({pctNeg(cv.margeNettePicture)} du prix de gros, comptes 2026)</>, kind: "margin", calc: { formula: "Prix de gros HT − coût de revient", assumptions: ["Coefficient de marque implicite = prix de gros ÷ coût"], steps: [`${fmtE(WHOLESALE_HT)} − 38,00 € = ${fmtE(brandMargin)}`, `Coefficient : ${fmtE(WHOLESALE_HT)} ÷ 38 = ${fmtN(WHOLESALE_HT / COST_REF, 2)}`, `Doit couvrir conception, salaires, marketing, frais généraux de Picture`] } },
     { name: "Prix de gros HT", base: 0, val: WHOLESALE_HT, kind: "total", calc: { formula: "Prix public HT ÷ coefficient magasin", assumptions: ["Coefficient magasin de 2,1, repris de la répartition de valeur publiée par Picture pour son t-shirt"], steps: [`162,50 ÷ 2,1 = ${fmtE(WHOLESALE_HT)}`] } },
-    { name: "Marge magasin", base: WHOLESALE_HT, val: retailMargin, kind: "margin", calc: { formula: "Prix public HT − prix de gros HT", assumptions: ["Coefficient multiplicateur distributeur de 2,1 (t-shirt Picture)", "Couvre loyer, personnel, démarque et marge du revendeur"], steps: [`162,50 − ${fmtN(WHOLESALE_HT, 2)} = ${fmtE(retailMargin)}`, `Taux de marque magasin : ${fmtE(retailMargin)} ÷ 162,50 = ${fmtP(retailMargin / PRICE_HT)}`] } },
+    { name: "Boutique : frais", base: WHOLESALE_HT, val: retailMargin, loss: -cv.perteBoutiques, frais: cv.fraisBoutiques, perte: cv.perteBoutiques,
+      tip: <>Marge brute {fmtE(cv.margeMagasin)} (coefficient ×{fmtN(COEF_RETAIL, 2)}, estimé) · Frais {fmtE(cv.fraisBoutiques)} · Résultat net {eurNeg(cv.perteBoutiques)} par veste ({pctNeg(cv.margeNetteBoutiques)} du prix public HT, comptes 2026)</>, kind: "margin", calc: { formula: "Prix public HT − prix de gros HT", assumptions: ["Coefficient multiplicateur distributeur de 2,1 (t-shirt Picture)", "Couvre loyer, personnel, démarque et marge du revendeur"], steps: [`162,50 − ${fmtN(WHOLESALE_HT, 2)} = ${fmtE(retailMargin)}`, `Taux de marque magasin : ${fmtE(retailMargin)} ÷ 162,50 = ${fmtP(retailMargin / PRICE_HT)}`] } },
     { name: "Prix public HT", base: 0, val: PRICE_HT, kind: "total", calc: { formula: "Prix TTC ÷ 1,2", assumptions: ["TVA à 20 %"], steps: ["195 ÷ 1,2 = 162,50 €"] } },
     { name: "TVA 20 %", base: PRICE_HT, val: tva, kind: "tax", calc: { formula: "Prix HT × 20 %", assumptions: ["Taux normal de TVA en France"], steps: ["162,50 × 0,20 = 32,50 €"] } },
     { name: "Prix public TTC", base: 0, val: PRODUCT.priceRef, kind: "final", calc: { formula: "Prix catalogue du site Picture", assumptions: ["195 € TTC affiché sur la fiche produit Picture"], steps: ["162,50 + 32,50 = 195,00 €"] } },
@@ -729,32 +777,53 @@ function TabCouts() {
         </div>
       </Section>
 
-      <Section eyebrow="Chaîne de valeur" title="De 38 € à 195 € : répartition des valeurs">
+      <Section eyebrow="Chaîne de valeur" title="De 38 € à 195 € : Picture et ses boutiques ne couvrent pas leurs frais">
+        <p className="text-sm text-muted -mt-2">Survoler une barre pour le détail, cliquer pour voir le calcul.</p>
         <Panel className="p-4">
-          <div className="h-[340px]">
+          <div className="h-[380px] sm:h-[360px]" role="img" aria-label={`Chaîne de valeur de 38 € à 195 €. Picture : marge brute ${fmtE(cv.margePicture)}, frais ${fmtE(cv.fraisPicture)}, perte ${eurNeg(cv.pertePicture)} par veste. Boutiques : marge brute ${fmtE(cv.margeMagasin)}, frais ${fmtE(cv.fraisBoutiques)}, perte ${eurNeg(cv.perteBoutiques)} par veste. Détail dans le tableau qui suit.`}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={wf} margin={{ top: 24, right: 8, left: 0, bottom: 8 }}>
+              <BarChart data={wf} margin={{ top: narrow ? 52 : 28, right: narrow ? 4 : 8, left: 0, bottom: 8 }}>
+                <defs>
+                  <pattern id="wf-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--loss)" strokeWidth="2" />
+                  </pattern>
+                </defs>
                 <CartesianGrid vertical={false} stroke={t.line} strokeDasharray="2 4" />
-                <XAxis dataKey="name" tick={{ fill: t.muted, fontSize: 11 }} interval={0} tickLine={false} axisLine={{ stroke: t.line }} height={46} tickFormatter={(v) => v.length > 14 ? v.replace(" ", "\n") : v} />
-                <YAxis tick={{ fill: t.muted, fontSize: 11 }} tickFormatter={(v) => v + " €"} axisLine={false} tickLine={false} width={52} domain={[0, 200]} ticks={[0, 50, 100, 150, 200]} />
-                <Tooltip cursor={{ fill: t.surface2 }} content={({ active, payload }) => active && payload && payload[1] ? (
-                  <div className="chart-tip"><strong>{payload[1].payload.name}</strong><div className="tabular-nums">{fmtE(payload[1].value)}</div><div className="text-xs text-muted">Cliquer pour le coefficient</div></div>) : null} />
+                <XAxis dataKey="name" tick={narrow ? { fill: t.muted, fontSize: 10, angle: -40, textAnchor: "end" } : { fill: t.muted, fontSize: 11 }} interval={0} tickLine={false} axisLine={{ stroke: t.line }} height={narrow ? 78 : 46} />
+                <YAxis tick={{ fill: t.muted, fontSize: 11 }} tickFormatter={(v) => v + " €"} axisLine={false} tickLine={false} width={narrow ? 44 : 52} domain={[0, 250]} ticks={[0, 50, 100, 150, 200, 250]} />
+                <Tooltip cursor={{ fill: t.surface2 }} content={({ active, payload }) => {
+                  if (!active || !payload || !payload[0]) return null;
+                  const d = payload[0].payload;
+                  return <div className="chart-tip max-w-[300px]"><strong>{d.name}</strong>{d.tip ? <div className="text-xs mt-1 leading-snug">{d.tip}</div> : <div className="tabular-nums">{fmtE(d.val)}</div>}<div className="text-xs text-muted mt-1">Cliquer pour le calcul</div></div>;
+                }} />
                 <Bar dataKey="base" stackId="a" fill="transparent" isAnimationActive={false} />
-                <Bar dataKey="val" stackId="a" isAnimationActive={false} radius={[3, 3, 0, 0]} onClick={(d) => open({ title: `${d.name} : ${fmtE(d.val)}`, ...d.calc })} style={{ cursor: "pointer" }}>
+                <Bar dataKey="val" stackId="a" isAnimationActive={false} radius={[3, 3, 0, 0]} onClick={(d) => open({ title: `${d.kind === "margin" ? "Marge brute" : d.name} : ${fmtE(d.val)}`, ...d.calc })} style={{ cursor: "pointer" }}>
                   {wf.map((d) => <Cell key={d.name} fill={kindColor[d.kind]} />)}
-                  <LabelList dataKey="val" position="top" formatter={(v) => fmtN(v, 2) + " €"} style={{ fill: t.ink, fontSize: 11, fontWeight: 600 }} />
+                  <LabelList dataKey="val" content={(p) => <WfValueLabel {...p} row={wf[p.index]} narrow={narrow} />} />
                 </Bar>
+                <Bar dataKey="loss" stackId="a" isAnimationActive={false} shape={(p) => <LossShape {...p} narrow={narrow} />} onClick={(d) => open({ title: `${d.name} : ${fmtE(d.frais)}`, ...d.calc })} style={{ cursor: "pointer" }} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-4 text-xs text-muted mt-2 px-1">
-            {[["cost", "Coût"], ["margin", "Marge (cliquable)"], ["total", "Prix intermédiaire"], ["tax", "TVA"], ["final", "Prix public"]].map(([k, l]) => <span key={k} className="flex items-center gap-1.5"><span className="chip" style={{ background: kindColor[k] }} />{l}</span>)}
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted mt-2 px-1">
+            {[["cost", "Coût"], ["margin", "Marge brute"], ["loss", "Frais non couverts (perte nette)"], ["total", "Prix intermédiaire"], ["tax", "TVA"], ["final", "Prix public"]].map(([k, l]) => (
+              <span key={k} className="flex items-center gap-1.5">{k === "loss" ? <span className="chip chip-hatch" /> : <span className="chip" style={{ background: kindColor[k] }} />}{l}</span>
+            ))}
           </div>
+          <p className="text-xs text-muted mt-3 px-1">Perte nette = prix de vente × marge nette (comptes au 31/03/2026) : Picture {pctNeg(cv.margeNettePicture)} sur {fmtE(cv.prixGrosHT)} ; boutiques Picture {pctNeg(cv.margeNetteBoutiques)} sur {fmtE(cv.prixPublicHT)}. Frais = marge brute + perte. Les frais incluent salaires, loyers, amortissements et charges financières. Boutiques Picture uniquement : la marge des revendeurs indépendants n'est pas connue.</p>
+          <table className="sr-only">
+            <caption>Marges brutes, frais et pertes par veste (comptes 2026)</caption>
+            <thead><tr><th>Acteur</th><th>Prix de vente</th><th>Marge brute</th><th>Frais</th><th>Résultat net par veste</th><th>Marge nette</th></tr></thead>
+            <tbody>
+              <tr><td>Picture</td><td>{fmtE(cv.prixGrosHT)} (prix de gros HT)</td><td>{fmtE(cv.margePicture)}</td><td>{fmtE(cv.fraisPicture)}</td><td>{eurNeg(cv.pertePicture)}</td><td>{pctNeg(cv.margeNettePicture)}</td></tr>
+              <tr><td>Boutiques Picture</td><td>{fmtE(cv.prixPublicHT)} (prix public HT)</td><td>{fmtE(cv.margeMagasin)}</td><td>{fmtE(cv.fraisBoutiques)}</td><td>{eurNeg(cv.perteBoutiques)}</td><td>{pctNeg(cv.margeNetteBoutiques)}</td></tr>
+            </tbody>
+          </table>
         </Panel>
         <div className="grid md:grid-cols-3 gap-4">
-          <Kpi label="Coefficient Picture" v={<Est title="Coefficient de marque Picture" calc={wf[1].calc}>× {fmtN(WHOLESALE_HT / COST_REF, 2)}</Est>} sub="prix de gros ÷ coût de revient" />
-          <Kpi label="Coefficient magasin" v={<Est title="Coefficient distributeur" calc={wf[3].calc}>× 2,10</Est>} sub="prix public HT ÷ prix de gros" />
-          <Kpi label="Marge brute sur vente directe" v={<Est title="Marge sur coût en vente directe (e-shop)" calc={{ formula: "Prix public HT − coût de revient", assumptions: ["Vente sur le site Picture, sans distributeur", "Ne couvre pas encore les frais de port, retours, paiement, marketing"], steps: ["162,50 − 38 = 124,50 €", "124,50 ÷ 162,50 = 76,6 %"] }}>124,50 € · 76,6 %</Est>} sub="si Picture vend en direct" />
+          <Kpi label="Résultat net Picture" v={<span className="est-wrap">{pctNeg(cv.margeNettePicture)}<span className="src-badge">Source : comptes 2026</span></span>} sub={<>soit {eurNeg(cv.pertePicture)} par veste · comptes 2026</>} tone="bad" />
+          <Kpi label="Résultat net des boutiques Picture" v={<span className="est-wrap">{pctNeg(cv.margeNetteBoutiques)}<span className="src-badge">Source : comptes 2026</span></span>} sub={<>soit {eurNeg(cv.perteBoutiques)} par veste · Store 1 et Store 2, comptes 2026</>} tone="bad" />
+          <Kpi label="Marge brute sur vente directe" v={<Est title="Marge sur coût en vente directe (e-shop)" calc={{ formula: "Prix public HT − coût de revient", assumptions: ["Vente sur le site Picture, sans distributeur", "Ne couvre pas encore les frais de port, retours, paiement, marketing"], steps: ["162,50 − 38 = 124,50 €", "124,50 ÷ 162,50 = 76,6 %"] }}>124,50 € · 76,6 %</Est>} sub="si Picture vend en direct, avant frais de structure" />
         </div>
         <details className="panel p-4 text-sm">
           <summary className="cursor-pointer font-semibold">Méthode alternative : répartition de la valeur du t-shirt Picture appliquée à l'Abstral</summary>
