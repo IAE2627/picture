@@ -14,7 +14,7 @@ Ouvrir `index.html` dans un navigateur, ou activer GitHub Pages
 - `src/input.css` : styles (Tailwind + thème clair/sombre)
 
 ## Données
-Toutes les valeurs affichées sont dans `src/data.jsx` : résultats du questionnaire (`SURVEY`), marge de référence 2025 (`PICTURE_2025`, `MARGE_2025`), élasticités (`ELASTICITE`), chaîne de valeur (`chaineValeur`).
+Toutes les valeurs affichées sont dans `src/data.jsx` : résultats du questionnaire (`SURVEY`), comptes 2025 et marge brute de référence (`comptes2025`), élasticités (`ELASTICITE`), chaîne de valeur (`chaineValeur`).
 
 Après modification de `src/`, reconstruire le site : `node build.js` (Node requis).
 

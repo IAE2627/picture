@@ -157,24 +157,41 @@ const COST_ITEMS = [
 const COST_TOTAL = COST_ITEMS.reduce((s, c) => s + c.value, 0); // 37,5
 const COST_REF = COST_TOTAL; // 37,50 € : somme des 7 postes, sans arrondi
 
-// ---------- Marge de référence de l'onglet Prix et promotion : exercice 2025 ----------
-// Comptes de l'exercice clos le 31/03/2025 (Pappers). Les charges de personnel sont
-// retirées de la marge brute : marge = (marge brute − salaires et charges sociales) ÷ CA.
-const PICTURE_2025 = { ca: 33.0, margeBrute: 14.6, personnel: 4.75 }; // M€
-const MARGE_2025 = (PICTURE_2025.margeBrute - PICTURE_2025.personnel) / PICTURE_2025.ca; // ≈ 29,8 %
+// ---------- Comptes 2025 : référence de marge pour toutes les pages ----------
+// Comptes annuels de Picture Organic Clothing, exercice 2025 (clos le 31/03/2025),
+// colonne N-1 des comptes 2026. La marge qui décide d'une remise est la MARGE BRUTE :
+// les salaires ne varient pas avec le nombre de vestes vendues.
+const comptes2025 = {
+  ca: 32972167,              // chiffre d'affaires net
+  achatsMatieres: 18663565,  // achats de matières premières et approvisionnements
+  variationStock: 1444331,   // variation de stock (charge)
+  salaires: 3494501,
+  chargesSociales: 1259138,
+};
+comptes2025.margeBrute = comptes2025.ca - comptes2025.achatsMatieres - comptes2025.variationStock;   // 12 864 271 €
+comptes2025.tauxMarge = comptes2025.margeBrute / comptes2025.ca;                                       // ≈ 39,0 %
+comptes2025.margeApresPersonnel = comptes2025.margeBrute - comptes2025.salaires - comptes2025.chargesSociales; // 8 110 632 €, pour information
+comptes2025.tauxApresPersonnel = comptes2025.margeApresPersonnel / comptes2025.ca;                    // ≈ 24,6 %, pour information
 
 // ---------- Élasticités-prix ----------
 // Gabor-Granger (onglet Questionnaire) : de 195 € (10 % d'intention) à 179 € (24 %).
 // Élasticité déclarative = variation de la demande ÷ variation du prix ; une intention
-// surestime l'achat réel : on la divise par un coefficient de déflation de 5 à 10.
+// surestime l'achat réel : on la divise par un coefficient de déflation de 5 à 10 (estimé).
 const ELASTICITE = {
   gg: { p0: 195, q0: 0.10, p1: 179, q1: 0.24, deflation: [5, 10] },
   saisons: [
     { id: "pre", label: "Présaison", mois: "octobre – novembre", prix: [-0.5, -0.8], txt: "Faible : le besoin d'équipement est imminent, la demande est inélastique." },
-    { id: "pleine", label: "Pleine saison", mois: "décembre – janvier", prix: [-0.6, -0.9], promo: [-1.2, -1.8], txt: "Peu sensible au niveau de prix, mais très réactive au signal « prix barré / bonne affaire »." },
+    { id: "pleine", label: "Pleine saison", mois: "décembre – janvier", prix: [-0.6, -0.9], txt: "Peu sensible au niveau de prix.",
+      ab: "Effet du prix barré : non significatif dans notre test A/B (intention 1,42 contre 1,57 ; p = 0,29). Le signal est bien vu, mais il ne fait pas acheter." },
     { id: "post", label: "Post-saison", mois: "février – mars", prix: [-1.5, -2.5], txt: "Forte : l'achat est différable, les clients attendent les soldes." },
   ],
 };
+// Élasticité réelle issue du questionnaire : déclarative ÷ 10 à ÷ 5 (≈ −1,7 à −3,4)
+(() => {
+  const g = ELASTICITE.gg;
+  const brute = ((g.q1 - g.q0) / g.q0) / ((g.p1 - g.p0) / g.p0);
+  ELASTICITE.questionnaire = [+(brute / g.deflation[1]).toFixed(1), +(brute / g.deflation[0]).toFixed(1)];
+})();
 
 // ---------- Chaîne de valeur ----------
 const PRICE_HT = 162.5;

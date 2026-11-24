@@ -315,3 +315,8 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
   .strip-legend { justify-content: flex-start; font-size: 12px; }
   .strip-axis span:nth-child(even) { display: none; }
 }
+
+/* Prix et promotion : phrase de robustesse, effet du prix barré */
+.robust-note { display: flex; gap: 8px; padding: 12px 14px; border-radius: 10px; font-size: .9rem; background: color-mix(in srgb, var(--forest) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--forest) 30%, var(--line)); color: var(--ink); }
+.robust-note svg { color: var(--forest); }
+.season-row.is-promo { display: block; font-size: .85rem; line-height: 1.45; }
