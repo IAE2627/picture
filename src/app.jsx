@@ -637,6 +637,51 @@ function Drawer({ b, onClose }) {
   );
 }
 
+// Nuage de points des prix (style du graphique « trop cher » par version du dossier) :
+// une bande, un point par veste, l'Abstral en trait vertical. Jitter vertical à graine fixe.
+function mulberry32(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function MarketStrip({ items }) {
+  const narrow = useNarrow();
+  const [tip, setTip] = useState(null);
+  const ref = PRODUCT.priceRef, max = 700, ticks = [0, 100, 200, 300, 400, 500, 600, 700];
+  const rnd = useMemo(() => { const r = mulberry32(195); return items.map(() => r()); }, [items]);
+  const nDir = items.filter((b) => b.ring === "direct").length, nInd = items.filter((b) => b.ring === "indirect").length;
+  const x = (p) => (p / max) * 100 + "%";
+  const prices = items.map((b) => b.price);
+  const label = `Nuage de points des prix de ${items.length} vestes concurrentes, de ${fmtPr(Math.min(...prices))} € à ${fmtPr(Math.max(...prices))} €. L'Abstral, à ${ref} €, se situe au milieu.`;
+  return (
+    <div className="strip" role="img" aria-label={label} onMouseLeave={() => setTip(null)}>
+      <div className="strip-legend" aria-hidden="true">
+        <span><i className="dot-direct" />Concurrents directs ({nDir})</span>
+        <span><i className="dot-indirect" />Concurrents indirects ({nInd})</span>
+      </div>
+      <div className="strip-body">
+        <div className="strip-label"><span className="font-semibold">marché</span><span className="text-muted text-sm">n = {items.length} vestes</span></div>
+        <div className="strip-plot">
+          {ticks.slice(1).map((v) => <span key={v} className="strip-grid" style={{ left: x(v) }} />)}
+          <div className="strip-ref" style={{ left: x(ref) }}>
+            <span className="strip-ref-lab">{narrow ? <>Picture · Abstral 2.5L<br />{ref} €</> : <>Picture · Abstral 2.5L {ref} €</>}</span>
+          </div>
+          {items.map((b, i) => (
+            <button key={b.id} type="button" className="strip-hit" style={{ left: x(b.price), top: `calc(14% + ${rnd[i] * 72}%)` }}
+              aria-label={`${b.name} · ${b.model} — ${fmtPr(b.price)} €`}
+              onMouseEnter={() => setTip({ b, i })} onFocus={() => setTip({ b, i })} onClick={() => setTip({ b, i })} onBlur={() => setTip(null)}>
+              <span className={"strip-dot dot-" + b.ring + (tip && tip.i === i ? " is-on" : "")} />
+            </button>
+          ))}
+          {tip && !narrow && (
+            <div className={"chart-tip strip-tip" + (tip.b.price > max * (narrow ? 0.42 : 0.6) ? " to-left" : "")} style={{ left: x(tip.b.price), top: `calc(14% + ${rnd[tip.i] * 72}%)` }}>
+              <strong>{tip.b.name}</strong> · {tip.b.model} — <span className="tabular-nums">{fmtPr(tip.b.price)} €</span>
+            </div>
+          )}
+          <div className="strip-axis" aria-hidden="true">{ticks.map((v) => <span key={v} style={{ left: x(v) }}>{v} €</span>)}</div>
+        </div>
+      </div>
+      {narrow && <div className="chart-tip strip-tip-docked" aria-live="polite">{tip ? <><strong>{tip.b.name}</strong> · {tip.b.model} — <span className="tabular-nums">{fmtPr(tip.b.price)} €</span></> : <span className="text-muted">Touchez un point pour voir la marque et le prix.</span>}</div>}
+    </div>
+  );
+}
+
 function TabConcurrence() {
   const [pick, setPick] = useState(null);
   const listed = BRANDS.filter((b) => b.ring !== "nous" && b.ring !== "hors");
@@ -646,6 +691,22 @@ function TabConcurrence() {
         <p className="text-sm text-muted max-w-prose">Les concurrents sont classés en trois cercles autour de l'Abstral. Une pastille vide en pointillés signale une marque dont les comptes de résultat sont indisponibles. Cliquez sur une marque du schéma pour ouvrir son profil complet, ou sur son nom à droite pour aller sur son site.</p>
         <Panel className="p-4 md:p-6"><RingMap onPick={setPick} /></Panel>
       </Section>
+
+      {(() => {
+        const priced = listed.filter((b) => b.price != null && (b.ring === "direct" || b.ring === "indirect"));
+        const ref = PRODUCT.priceRef;
+        const below = priced.filter((b) => b.price < ref).length, above = priced.filter((b) => b.price > ref).length;
+        const medDir = (() => { const s = priced.filter((b) => b.ring === "direct").map((b) => b.price).sort((p, q) => p - q), n = s.length; return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2; })();
+        return (
+          <Section eyebrow="Positionnement prix" title={`À ${ref} €, l'Abstral est au centre du marché`}>
+            <p className="text-sm text-muted -mt-2">Prix publics TTC de {priced.length} vestes : {below} moins chères, {above} plus chères. Médiane des concurrents directs : {fmtPr(medDir)} €.</p>
+            <Panel className="p-4 md:p-6">
+              <MarketStrip items={priced} />
+              <p className="text-xs text-muted mt-3">La position verticale sert seulement à séparer les points : seul l'axe horizontal (le prix) a un sens. Source : dossier « Prix et budget ».</p>
+            </Panel>
+          </Section>
+        );
+      })()}
 
       <Section eyebrow="Repères de prix" title="Toutes les vestes comparables">
         <div className="table-wrap">
