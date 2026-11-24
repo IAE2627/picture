@@ -1249,11 +1249,11 @@ function VWChart() {
         </ResponsiveContainer>
       </div>
       <div className="vw-points">
-        {[["PMC", pts.pmc, "point marginal de bon marché"], ["OPP", pts.opp, "prix optimal"], ["IPP", pts.ipp, "prix d'indifférence"], ["PME", pts.pme, "point marginal de cherté"]].map(([k, v, l]) => (
+        {[["PMC", pts.pmc, "point marginal de bon marché"], ["OPP", pts.opp, "prix optimal"], ["IPP", pts.ipp, "prix d'indifférence"]].map(([k, v, l]) => (
           <div key={k}><span className="font-semibold">{k} {v} €</span><span className="text-muted"> · {l}</span></div>
         ))}
       </div>
-      <p className="text-xs text-muted">Bande verte : zone acceptable au sens strict, du point marginal de bon marché ({pts.pmc} €) au point marginal de cherté ({pts.pme} €). Le prix réellement accepté se concentre entre le prix optimal ({pts.opp} €) et le point de cherté ({pts.pme} €). Courbes relevées sur le graphique du dossier, à ± 1 point.</p>
+      <p className="text-xs text-muted">Bande verte : zone de prix acceptable ({pts.pmc}–{pts.pme} €). Courbes relevées sur le graphique du dossier, à ± 1 point.</p>
     </>
   );
 }
@@ -1350,7 +1350,7 @@ function TabQuestionnaire({ go }) {
           <Kpi label="Qualité perçue" v={<>{fmtN(k.quality, 2)}<span className="text-base text-muted">/5</span></>} sub="la veste convainc" tone="good" />
           <Kpi label="Achèteraient à 195 €" v={pct0(k.buy195)} sub="intention d'achat" tone="bad" />
           <Kpi label="« Trop cher » médian" v={k.medTropCher + " €"} sub="sous le prix de 195 €" tone="bad" />
-          <Kpi label="Prix accepté" v={k.zoneLo + "–" + k.zoneHi + " €"} sub="du prix optimal au point de cherté" tone="warn" />
+          <Kpi label="Prix accepté" v={k.zoneLo + "–" + k.zoneHi + " €"} sub="Van Westendorp" tone="warn" />
         </div>
       </div>
 
@@ -1375,9 +1375,11 @@ function TabQuestionnaire({ go }) {
             <p className="text-muted">Les écarts observés ci-dessous viennent donc bien du prix barré, et non d'un affichage passé inaperçu.</p>
           </Panel>
         </div>
-        <p className="text-sm max-w-prose">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain significatif d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>. Le groupe B affiche 12 % d'intention positive contre 8 % pour A : l'écart n'est pas significatif, mais il n'est pas strictement nul. Pour la qualité perçue, en revanche, l'absence d'effet est établie (3,95 contre 3,95, test d'équivalence).</p>
         <div className="grid lg:grid-cols-2 gap-6">
-          <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse"><IntentChart /></ChartPanel>
+          <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse">
+            <IntentChart />
+            <p className="text-sm mt-1">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain significatif d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>. Le groupe B affiche 12 % d'intention positive contre 8 % pour A : l'écart n'est pas significatif, mais il n'est pas strictement nul. Pour la qualité perçue, en revanche, l'absence d'effet est établie (3,95 contre 3,95, test d'équivalence).</p>
+          </ChartPanel>
           <ChartPanel title="Qualité perçue, A contre B" sub="Score moyen sur 5 (moyenne des 5 items)">
             <ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" />
             <div className="text-sm flex flex-col gap-2 mt-1">
