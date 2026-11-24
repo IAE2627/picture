@@ -708,25 +708,6 @@ function TabConcurrence() {
         );
       })()}
 
-      <Section eyebrow="Repères de prix" title="Toutes les vestes comparables">
-        <div className="table-wrap">
-          <table className="data-table">
-            <thead><tr><th>Marque</th><th>Cercle</th><th>Modèle</th><th className="text-right">Prix TTC</th><th></th></tr></thead>
-            <tbody>
-              {listed.sort((a, b) => (a.price || 999) - (b.price || 999)).map((b) => (
-                <tr key={b.id}>
-                  <td className="font-semibold">{b.name}</td>
-                  <td><span className={"ring-dot ring-" + b.ring} /> {RING_LABEL[b.ring].replace("Concurrents ", "")}</td>
-                  <td>{b.model}</td>
-                  <td className="text-right tabular-nums">{b.price == null ? "—" : b.priceEstimated ? <Est title={"Prix " + b.model} calc={b.priceCalc}>{b.price} €</Est> : <Src href={b.priceSrc || b.shop}>{fmtPr(b.price)} €</Src>}</td>
-                  <td className="text-right"><button className="link-btn" onClick={() => setPick(b)}>Profil<L.ChevronRight size={14} /></button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="text-xs text-muted">Prix relevés dans le dossier « Prix et budget ». Les liens renvoient vers la boutique officielle de chaque marque ; seul le prix Columbia pointe vers la fiche produit exacte. Source de classement des marques éco : <Src href={SRC.consoglobe}>Consoglobe</Src>.</p>
-      </Section>
       <Drawer b={pick} onClose={() => setPick(null)} />
     </div>
   );
