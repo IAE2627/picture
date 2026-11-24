@@ -155,7 +155,26 @@ const COST_ITEMS = [
 ];
 
 const COST_TOTAL = COST_ITEMS.reduce((s, c) => s + c.value, 0); // 37,5
-const COST_REF = 38; // arrondi retenu par le dossier
+const COST_REF = COST_TOTAL; // 37,50 € : somme des 7 postes, sans arrondi
+
+// ---------- Marge de référence de l'onglet Prix et promotion : exercice 2025 ----------
+// Comptes de l'exercice clos le 31/03/2025 (Pappers). Les charges de personnel sont
+// retirées de la marge brute : marge = (marge brute − salaires et charges sociales) ÷ CA.
+const PICTURE_2025 = { ca: 33.0, margeBrute: 14.6, personnel: 4.75 }; // M€
+const MARGE_2025 = (PICTURE_2025.margeBrute - PICTURE_2025.personnel) / PICTURE_2025.ca; // ≈ 29,8 %
+
+// ---------- Élasticités-prix ----------
+// Gabor-Granger (onglet Questionnaire) : de 195 € (10 % d'intention) à 179 € (24 %).
+// Élasticité déclarative = variation de la demande ÷ variation du prix ; une intention
+// surestime l'achat réel : on la divise par un coefficient de déflation de 5 à 10.
+const ELASTICITE = {
+  gg: { p0: 195, q0: 0.10, p1: 179, q1: 0.24, deflation: [5, 10] },
+  saisons: [
+    { id: "pre", label: "Présaison", mois: "octobre – novembre", prix: [-0.5, -0.8], txt: "Faible : le besoin d'équipement est imminent, la demande est inélastique." },
+    { id: "pleine", label: "Pleine saison", mois: "décembre – janvier", prix: [-0.6, -0.9], promo: [-1.2, -1.8], txt: "Peu sensible au niveau de prix, mais très réactive au signal « prix barré / bonne affaire »." },
+    { id: "post", label: "Post-saison", mois: "février – mars", prix: [-1.5, -2.5], txt: "Forte : l'achat est différable, les clients attendent les soldes." },
+  ],
+};
 
 // ---------- Chaîne de valeur ----------
 const PRICE_HT = 162.5;
@@ -171,8 +190,8 @@ const comptes2026 = {
   boutiques: { resultatNet: -137468 - 159434, ca: 347476 + 409946 },
 };
 const chaineValeur = {
-  coutRevient: 38.00,
-  margePicture: 39.38, prixGrosHT: 77.38,
+  coutRevient: COST_REF,                                       // 37,50
+  margePicture: +(WHOLESALE_HT - COST_REF).toFixed(2), prixGrosHT: WHOLESALE_HT, // 39,88 · 77,38
   margeMagasin: 85.12, prixPublicHT: 162.50,
   tva: 32.50, prixPublicTTC: 195.00,
   margeNettePicture: comptes2026.picture.resultatNet / comptes2026.picture.ca,       // ≈ −0,097
@@ -242,7 +261,7 @@ const BRANDS = [
     },
   },
   {
-    id: "rab", noAccounts: true, name: "Rab", ring: "direct", model: "Kinetic 2.0", price: 250, eco: [2, 2, 1, 1, 1], ca: 112,
+    id: "rab", name: "Rab", ring: "direct", model: "Kinetic 2.0", price: 250, eco: [2, 2, 1, 1, 1], ca: 112,
     shop: "https://rab.equipment/eu/kinetic-2-0-jacket",
     note: "Même construction 2,5 couches, recyclée et sans PFC, plus légère.",
     tarifs: "Milieu à haut de gamme : veste imperméable 360 – 380 €, doudoune 400 – 480 €, polaire 170 €.",
@@ -278,7 +297,7 @@ const BRANDS = [
     fin: null, finMissing: "Comptes non collectés (société allemande).",
   },
   {
-    id: "millet", name: "Millet", ring: "indirect", model: "Seneca 2.5L", price: 180, eco: [1, 2, 1, 1, 1], ca: 73.45,
+    id: "millet", name: "Millet", ring: "direct", model: "Seneca 2.5L", price: 180, eco: [1, 2, 1, 1, 1], ca: 73.45,
     shop: "https://www.lepape.com/en/millet-seneca-2-5l-jkt-man-black",
     note: "Modèle directement comparable : 2,5 couches, 10 000 / 10 000, souvent soldé entre 110 et 144 €.",
     tarifs: "Technique haut de gamme (150 € à plus de 1 200 €), entrée technique avec la Seneca 2.5L à 180 €.",
@@ -395,7 +414,6 @@ const BRANDS = [
         { label: "Résultat net", value: "0,56 M€ (−39 %)", src: null },
       ],
       bilan: [{ label: "Trésorerie", value: "5,2 M€", src: null }, { label: "Dette bancaire", value: "Aucune", src: null }],
-      warn: "Le dossier ne donne pas le lien des comptes : à ajouter.",
     },
   },
   {
@@ -608,28 +626,35 @@ const SURVEY = {
     A: { label: "Version A", desc: "prix affiché 195 €", n: 74 },
     B: { label: "Version B", desc: "249 € barré, 195 €", n: 51 },
   },
-  measures: "prix acceptables (Van Westendorp), intention d'achat (Gabor-Granger), qualité perçue, engagement",
+  measures: "prix acceptables (Van Westendorp), intention d'achat (méthode Gabor-Granger et échelle à 4 niveaux à 195 €), qualité perçue, engagement",
   kpi: { quality: 3.95, buy195: 0.10, medTropCher: 180, zoneLo: 100, zoneHi: 130 },
   tests: { manip: "p < 0,001", intent: "p = 0,29", quality: "p = 0,99" },
 
   // Van Westendorp, toutes versions : part cumulée (%) par prix, lue sur la courbe du dossier
   // (pas de 5 €, précision ± 1 point). Colonnes : [prix, trop bon marché, bon marché, cher, trop cher]
   vw: [[0,100,100,0,0],[5,100,100,0,0],[10,99,99,0,0],[15,97,99,0,0],[20,92,99,0,0],[25,92,99,0,0],[30,83,99,0,0],[35,83,99,0,0],[40,72,97,0,0],[45,69,97,0,0],[50,69,94,0,0],[55,49,94,0,0],[60,40,90,1,0],[65,38,89,1,0],[70,34,89,3,0],[75,30,83,3,0],[80,22,75,8,1],[85,21,74,8,1],[90,14,61,11,2],[95,14,58,14,3],[100,6,36,18,10],[105,6,35,18,10],[110,4,33,25,11],[115,4,32,26,11],[120,3,19,34,14],[125,2,18,36,14],[130,2,14,40,16],[135,2,14,41,16],[140,2,12,46,18],[145,2,11,49,19],[150,2,2,70,36],[155,2,2,70,36],[160,2,2,74,39],[165,2,2,75,39],[170,2,2,78,44],[175,2,2,82,45],[180,1,1,82,52],[185,1,1,82,52],[190,1,1,82,54],[195,1,1,87,56],[200,0,0,94,81],[205,0,0,94,81],[210,0,0,94,81],[215,0,0,94,81],[220,0,0,96,83],[225,0,0,96,83],[230,0,0,96,84],[235,0,0,96,84],[240,0,0,96,85],[245,0,0,96,86],[250,0,0,99,92],[255,0,0,99,92],[260,0,0,99,92],[265,0,0,99,92],[270,0,0,99,92],[275,0,0,99,92],[280,0,0,99,92],[285,0,0,99,92],[290,0,0,99,92],[295,0,0,99,92],[300,0,0,99,92]],
-  vwPoints: { pmc: 100, opp: 100, ipp: 120, pme: 130 },
+  vwPoints: { pmc: 94, opp: 100, ipp: 120, pme: 130 }, // PMC : croisement « trop bon marché » × « cher », entre 92 et 95 €
   // Gabor-Granger, 125 répondants : part qui achèterait à chaque prix
   gg: [{ p: 99, buy: 0.90 }, { p: 129, buy: 0.70 }, { p: 179, buy: 0.24 }, { p: 195, buy: 0.10 }, { p: 239, buy: 0.03 }, { p: 259, buy: 0.02 }],
 
   // Intention d'achat à 195 € : effectifs Non / Probablement pas / Probablement / Oui certainement
   intent195: { levels: ["Non", "Probablement pas", "Probablement", "Oui certainement"], A: [51, 17, 4, 2], B: [30, 15, 4, 2], meanA: 1.42, meanB: 1.57, test: "t(99,6) = −1,06 ; p = 0,29" },
+  // Version A (195 €) contre version B (249 € barré, 195 €) : moyennes et tests de Welch
+  ab: [
+    { k: "Promotion perçue", unit: "/ 5", min: 1, max: 5, A: 2.08, B: 4.31, test: "t = −14,33 ; p < 0,001 ; d = 2,52", sig: true, note: "le prix barré est bien vu" },
+    { k: "Qualité perçue", unit: "/ 5", min: 1, max: 5, A: 3.95, B: 3.95, test: "p = 0,99 ; équivalence p = 0,018", sig: false, note: "aucun effet" },
+    { k: "Intention d'achat à 195 €", unit: "/ 4", min: 1, max: 4, A: 1.42, B: 1.57, test: "p = 0,29", sig: false, note: "8 % contre 12 % d'intention positive : écart non significatif" },
+    { k: "Seuil « trop cher » moyen", unit: "€", min: 100, max: 250, A: 184.82, B: 191.08, test: "p = 0,59", sig: false, note: "non significatif" },
+  ],
   // Qualité perçue moyenne (/5) par groupe (moyenne des 5 items)
   qualityAB: { A: 3.95, B: 3.95 },
   // Méthodologie détaillée (texte du dossier)
   detail: [
     ["Équilibre des groupes A / B", "Âge : t(115,3) = −0,08 ; p = 0,94. Genre : χ²(1) = 0,55 ; p = 0,46. Niveau de pratique : écart non significatif."],
-    ["Perception de la promotion", "Note de promotion 2,08 (A) contre 4,31 (B) sur 5 ; t(118,7) = −14,33 ; p < 0,001 ; d = 2,23."],
+    ["Perception de la promotion", "Note de promotion 2,08 (A) contre 4,31 (B) sur 5 ; t(118,7) = −14,33 ; p < 0,001 ; d = 2,52."],
     ["Fiabilité (alpha de Cronbach)", "Qualité perçue 0,86 ; engagement 0,91 (seuil 0,70). Fiabilité composite identique."],
     ["Validité", "AVE 0,56 et 0,67 (seuil 0,50) ; HTMT 0,16 (maximum 0,85)."],
-    ["Analyse factorielle confirmatoire", "χ²(34) = 46,9 (p = 0,07) ; CFI 0,977 ; TLI 0,969 ; RMSEA 0,062 ; SRMR 0,053. Poids de 0,59 à 0,91."],
+    ["Analyse factorielle confirmatoire", "χ²(34) = 46,9 (p = 0,07) ; CFI 0,977 ; TLI 0,969 ; RMSEA 0,062 ; SRMR 0,053. Le RMSEA est calculé sur les 100 répondants pratiquant l'outdoor (échantillon des échelles) : √((46,9 − 34) ÷ (34 × 99)) = 0,062 ; sur N = 125, il serait de 0,055. Poids de 0,59 à 0,91."],
     ["Effet sur l'intention / la qualité", "p = 0,29 / p = 0,99"],
   ],
 };

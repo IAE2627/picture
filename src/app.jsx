@@ -407,7 +407,7 @@ function BrandFile() {
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <Kpi label="Prix moyen des 17 vestes de ski" v={<Est title="Prix moyen des vestes de ski homme" calc={{ formula: "Moyenne simple des prix publics des 17 vestes de ski homme", assumptions: ["Prix relevés sur le site Picture", "Moyenne non pondérée par les ventes"], steps: ["Somme des 17 prix ÷ 17 ≈ 310 €"] }}>≈ 310 €</Est>} sub="majorité entre 200 et 400 €" />
-            <Kpi label="Abstral (homme et femme)" v={<Src href={SRC.abstral}>195 €</Src>} sub="sous l'entrée de gamme ski (185 – 200 €)" />
+            <Kpi label="Abstral (homme et femme)" v={<Src href={SRC.abstral}>195 €</Src>} sub="entrée de gamme ski (185 – 200 €)" />
           </div>
           <p><strong>Autres vêtements.</strong> Homme : t-shirts 39,90 €, sweats 65 à 115 €, polaires 139,90 à 165 €, chemises 85 à 110 €, pantalon 95 €, doudoune Hilko 269,90 €. Femme : t-shirts 35 à 39,90 €, polaires 149,90 €, chemises 110 à 120 €, gilet réversible 149,90 €. Accessoires : bonnet 35 €, casquette 39,90 €.</p>
           <p><strong>Politique de prix.</strong> Prix fixe affiché en saison, avec un outlet séparé (« bons plans ») pour solder. Les revendeurs tiers soldent jusqu'à −50 % ou −60 % les collections précédentes.</p>
@@ -484,12 +484,13 @@ function ecoCalc(b) {
 
 const EXTRA_OUBLIES = [
   { id: "vinted", name: "Vinted", kind: "Plateforme de seconde main", shop: "https://www.vinted.fr/" },
+  { id: "decathlon", name: "Decathlon", kind: "Marque de distributeur (Quechua, Forclaz ; Simond appartient aussi à Decathlon)", shop: "https://www.decathlon.fr/" },
   { id: "pakpak", ini: "PK", name: "Cape des Pakpak", kind: "Cape de pluie traditionnelle des Pakpak", shop: null },
 ];
 const RINGS = [
   { k: "direct", title: "Les directs", def: "même offre, mêmes clients", detail: "Vestes techniques outdoor et ski de marques établies, pour les mêmes pratiquants." },
   { k: "indirect", title: "Les indirects", def: "autre offre, même besoin", detail: "Montagne, pluie urbaine, lifestyle ou sport grand public : se protéger de la pluie et du froid." },
-  { k: "oublie", title: "Ceux qu'on oublie", def: "marques de distributeur, plateformes, offre publique, gratuit, « faire soi-même »", detail: "Seconde main et solutions traditionnelles." },
+  { k: "oublie", title: "Ceux qu'on oublie", def: "marques de distributeur, plateformes, offre publique, gratuit, « faire soi-même »", detail: "Marques de distributeur, seconde main et solutions traditionnelles." },
 ];
 
 function initials(n) { return n.replace("The ", "").split(/[\s']/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase(); }
@@ -540,7 +541,7 @@ function RingMap({ onPick }) {
             <div className="font-semibold">{hb.name}</div>
             <div className="text-xs text-muted">{hb.extra ? hb.kind : hb.model}</div>
             {hb.price != null && <div className="text-sm mt-1 tabular-nums">{fmtPr(hb.price)} € {hb.priceEstimated ? "(estimé)" : ""}</div>}
-            {hb.noAccounts && <div className="text-xs mt-1" style={{ color: t.warn }}>Comptes de résultat indisponibles</div>}<div className="text-xs text-muted mt-1">{hb.extra ? (hb.shop ? "Cliquer pour ouvrir le site" : "Lien à ajouter") : "Cliquer pour ouvrir le profil"}</div>
+            {hb.noAccounts && <div className="text-xs mt-1" style={{ color: t.warn }}>Comptes de résultat indisponibles</div>}<div className="text-xs text-muted mt-1">{hb.extra ? (hb.shop ? "Cliquer pour ouvrir le site" : "") : "Cliquer pour ouvrir le profil"}</div>
           </div>
         )}
       </div>
@@ -574,7 +575,7 @@ function Rich({ v }) {
 
 function FinRow({ r }) {
   return (
-    <div className="fin-row"><span>{r.label}</span><span className="tabular-nums font-medium">{r.src ? <Src href={r.src}>{r.value}</Src> : <span title="Lien source à ajouter">{r.value}<sup className="text-warn"> *</sup></span>}</span></div>
+    <div className="fin-row"><span>{r.label}</span><span className="tabular-nums font-medium">{r.src ? <Src href={r.src}>{r.value}</Src> : <span>{r.value}</span>}</span></div>
   );
 }
 
@@ -625,7 +626,6 @@ function Drawer({ b, onClose }) {
                 <div><div className="label">Bilan</div>{b.fin.bilan.map((r) => <FinRow key={r.label} r={r} />)}</div>
               </div>
               {b.fin.warn && <p className="text-xs text-muted mt-3"><L.AlertTriangle size={12} className="inline -mt-0.5 mr-1" />{b.fin.warn}</p>}
-              {b.fin.cr.concat(b.fin.bilan).some((r) => !r.src) && <p className="text-xs text-muted mt-1">* Chiffre repris du dossier, lien vers les comptes à compléter.</p>}
             </>
           ) : (
             b.finText ? <div className="text-sm mt-2"><Rich v={b.finText} /><p className="text-xs text-muted mt-2">{b.finMissing}</p></div> :
@@ -642,7 +642,7 @@ function TabConcurrence() {
   const listed = BRANDS.filter((b) => b.ring !== "nous" && b.ring !== "hors");
   return (
     <div className="flex flex-col gap-10">
-      <Section eyebrow="Le marché" title="La veste de pluie technique 2,5 couches, vendue entre 120 et 400 € à des pratiquants outdoor et glisse">
+      <Section eyebrow="Le marché" title="La veste de pluie technique 2,5 couches, vendue entre 160 et 400 € par les concurrents directs à des pratiquants outdoor et glisse">
         <p className="text-sm text-muted max-w-prose">Les concurrents sont classés en trois cercles autour de l'Abstral. Une pastille vide en pointillés signale une marque dont les comptes de résultat sont indisponibles. Cliquez sur une marque du schéma pour ouvrir son profil complet, ou sur son nom à droite pour aller sur son site.</p>
         <Panel className="p-4 md:p-6"><RingMap onPick={setPick} /></Panel>
       </Section>
@@ -732,7 +732,7 @@ function TabCouts() {
   const retailMargin = PRICE_HT - WHOLESALE_HT;
   const tva = PRODUCT.priceRef - PRICE_HT;
   const wf = [
-    { name: "Coût de revient", base: 0, val: COST_REF, kind: "cost", calc: { formula: "Coût sortie d'usine + transport + douane", assumptions: ["Estimation centrale du dossier, arrondie"], steps: [`Sortie d'usine : 17 + 8 + 3 + 4 + 1 = 33 €`, `Import : 2,50 + 2 = 4,50 €`, `Total : 37,50 € → arrondi à 38 €`] } },
+    { name: "Coût de revient", base: 0, val: COST_REF, kind: "cost", calc: { formula: "Coût sortie d'usine + transport + douane", assumptions: ["Estimation centrale du dossier"], steps: [`Sortie d'usine : 17 + 8 + 3 + 4 + 1 = 33 €`, `Import : 2,50 + 2 = 4,50 €`, `Total : 37,50 €`] } },
     { name: "Picture : frais", base: COST_REF, val: brandMargin, loss: -cv.pertePicture, frais: cv.fraisPicture, perte: cv.pertePicture, lossSide: "left",
       tip: <>Marge brute {fmtE(cv.margePicture)} (coefficient ×{fmtN(cv.prixGrosHT / cv.coutRevient, 2)}, estimé) · Frais {fmtE(cv.fraisPicture)} · Résultat net {eurNeg(cv.pertePicture)} par veste ({pctNeg(cv.margeNettePicture)} du prix de gros, comptes 2026)</>, kind: "margin", calc: { formula: "Prix de gros HT − coût de revient", assumptions: ["Coefficient de marque implicite = prix de gros ÷ coût"], steps: [`${fmtE(WHOLESALE_HT)} − 38,00 € = ${fmtE(brandMargin)}`, `Coefficient : ${fmtE(WHOLESALE_HT)} ÷ 38 = ${fmtN(WHOLESALE_HT / COST_REF, 2)}`, `Doit couvrir conception, salaires, marketing, frais généraux de Picture`] } },
     { name: "Prix de gros HT", base: 0, val: WHOLESALE_HT, kind: "total", calc: { formula: "Prix public HT ÷ coefficient magasin", assumptions: ["Coefficient magasin de 2,1, repris de la répartition de valeur publiée par Picture pour son t-shirt"], steps: [`162,50 ÷ 2,1 = ${fmtE(WHOLESALE_HT)}`] } },
@@ -746,7 +746,7 @@ function TabCouts() {
 
   return (
     <div className="flex flex-col gap-10">
-      <Section eyebrow="Coût de revient unitaire" title={<>Fabriquer une Abstral et la livrer en France coûte environ <Est title="Coût de revient estimé" calc={{ formula: "Somme des 7 postes de coût", assumptions: ["Estimation centrale du dossier", "Fourchette prudente 30 – 50 €"], steps: COST_ITEMS.map((c) => `${c.label} : ${fmtE(c.value)}`).concat([`Total : ${fmtE(COST_TOTAL)} → arrondi 38 €`]) }}>38 €</Est></>}>
+      <Section eyebrow="Coût de revient unitaire" title={<>Fabriquer une Abstral et la livrer en France coûte environ <Est title="Coût de revient estimé" calc={{ formula: "Somme des 7 postes de coût", assumptions: ["Estimation centrale du dossier", "Fourchette prudente 30 – 50 €"], steps: COST_ITEMS.map((c) => `${c.label} : ${fmtE(c.value)}`).concat([`Total : ${fmtE(COST_TOTAL)}`]) }}>37,50 €</Est></>}>
         <div className="grid lg:grid-cols-[360px_1fr] gap-6 items-center">
           <Panel className="p-4">
             <div className="relative h-[300px]">
@@ -777,10 +777,10 @@ function TabCouts() {
         </div>
       </Section>
 
-      <Section eyebrow="Chaîne de valeur" title="De 38 € à 195 € : Picture et ses boutiques ne couvrent pas leurs frais">
+      <Section eyebrow="Chaîne de valeur" title="De 37,50 € à 195 € : Picture et ses boutiques ne couvrent pas leurs frais">
         <p className="text-sm text-muted -mt-2">Survoler une barre pour le détail, cliquer pour voir le calcul.</p>
         <Panel className="p-4">
-          <div className="h-[380px] sm:h-[360px]" role="img" aria-label={`Chaîne de valeur de 38 € à 195 €. Picture : marge brute ${fmtE(cv.margePicture)}, frais ${fmtE(cv.fraisPicture)}, perte ${eurNeg(cv.pertePicture)} par veste. Boutiques : marge brute ${fmtE(cv.margeMagasin)}, frais ${fmtE(cv.fraisBoutiques)}, perte ${eurNeg(cv.perteBoutiques)} par veste. Détail dans le tableau qui suit.`}>
+          <div className="h-[380px] sm:h-[360px]" role="img" aria-label={`Chaîne de valeur de 37,50 € à 195 €. Picture : marge brute ${fmtE(cv.margePicture)}, frais ${fmtE(cv.fraisPicture)}, perte ${eurNeg(cv.pertePicture)} par veste. Boutiques : marge brute ${fmtE(cv.margeMagasin)}, frais ${fmtE(cv.fraisBoutiques)}, perte ${eurNeg(cv.perteBoutiques)} par veste. Détail dans le tableau qui suit.`}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={wf} margin={{ top: narrow ? 52 : 28, right: narrow ? 4 : 8, left: 0, bottom: 8 }}>
                 <defs>
@@ -823,10 +823,10 @@ function TabCouts() {
         <div className="grid md:grid-cols-3 gap-4">
           <Kpi label="Résultat net Picture" v={<span className="est-wrap">{pctNeg(cv.margeNettePicture)}<span className="src-badge">Source : comptes 2026</span></span>} sub={<>soit {eurNeg(cv.pertePicture)} par veste · comptes 2026</>} tone="bad" />
           <Kpi label="Résultat net des boutiques Picture" v={<span className="est-wrap">{pctNeg(cv.margeNetteBoutiques)}<span className="src-badge">Source : comptes 2026</span></span>} sub={<>soit {eurNeg(cv.perteBoutiques)} par veste · Store 1 et Store 2, comptes 2026</>} tone="bad" />
-          <Kpi label="Marge brute sur vente directe" v={<Est title="Marge sur coût en vente directe (e-shop)" calc={{ formula: "Prix public HT − coût de revient", assumptions: ["Vente sur le site Picture, sans distributeur", "Ne couvre pas encore les frais de port, retours, paiement, marketing"], steps: ["162,50 − 38 = 124,50 €", "124,50 ÷ 162,50 = 76,6 %"] }}>124,50 € · 76,6 %</Est>} sub="si Picture vend en direct, avant frais de structure" />
+          <Kpi label="Marge brute sur vente directe" v={<Est title="Marge sur coût en vente directe (e-shop)" calc={{ formula: "Prix public HT − coût de revient", assumptions: ["Vente sur le site Picture, sans distributeur", "Ne couvre pas encore les frais de port, retours, paiement, marketing"], steps: [`162,50 − ${fmtN(COST_REF, 2)} = ${fmtE(PRICE_HT - COST_REF)}`, `${fmtN(PRICE_HT - COST_REF, 2)} ÷ 162,50 = ${fmtP((PRICE_HT - COST_REF) / PRICE_HT)}`] }}>{fmtE(PRICE_HT - COST_REF)} · {fmtP((PRICE_HT - COST_REF) / PRICE_HT)}</Est>} sub="si Picture vend en direct, avant frais de structure" />
         </div>
         <details className="panel p-4 text-sm">
-          <summary className="cursor-pointer font-semibold">Méthode alternative : répartition de la valeur du t-shirt Picture appliquée à l'Abstral</summary>
+          <summary className="cursor-pointer font-semibold">Répartition de la valeur du t-shirt Picture appliquée à l'Abstral</summary>
           <div className="table-wrap mt-3">
             <table className="data-table">
               <thead><tr><th>Acteur</th><th>Part du t-shirt (HT)</th><th className="text-right">Abstral</th><th className="text-right">Part du TTC</th><th>Prix cumulé</th></tr></thead>
@@ -838,7 +838,7 @@ function TabCouts() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-muted mt-2">Source de la répartition : <Src href={SRC.pictureMadeIn}>Picture, t-shirt made in France</Src>. Les coefficients d'un t-shirt surestiment probablement le coût d'une veste technique ; l'estimation par postes (38 €) est retenue.</p>
+          <p className="text-xs text-muted mt-2">Source de la répartition : <Src href={SRC.pictureMadeIn}>Picture, t-shirt made in France</Src>. Les coefficients d'un t-shirt surestiment probablement le coût d'une veste technique ; l'estimation par postes (37,50 €) est retenue.</p>
         </details>
       </Section>
     </div>
@@ -849,12 +849,10 @@ function TabCouts() {
 // Onglet 4 — Simulateur
 // =========================================================
 const MARGIN_PRESETS = [
-  { id: "compta", label: "Marge brute Picture (comptes 2026)", m: 12.4 / 27.1, price: PRICE_HT, est: false,
-    calc: { formula: "Marge brute ÷ CA (Pappers)", assumptions: ["Taux moyen toutes ventes confondues (gros + direct)", "Appliqué au prix public HT pour les montants unitaires"], steps: ["12,4 M€ ÷ 27,1 M€ = 45,8 %"] } },
-  { id: "dtc", label: "Abstral vendue en direct (e-shop)", m: (PRICE_HT - COST_REF) / PRICE_HT, price: PRICE_HT, est: true,
-    calc: { formula: "(Prix HT − coût de revient) ÷ prix HT", assumptions: ["Coût de revient estimé 38 €", "Hors frais de port, retours et marketing"], steps: ["(162,50 − 38) ÷ 162,50 = 76,6 %"] } },
-  { id: "gros", label: "Abstral vendue en gros (magasins)", m: (WHOLESALE_HT - COST_REF) / WHOLESALE_HT, price: WHOLESALE_HT, est: true,
-    calc: { formula: "(Prix de gros − coût de revient) ÷ prix de gros", assumptions: ["Prix de gros = 162,50 ÷ 2,1", "La remise s'applique au prix de gros"], steps: [`(${fmtN(WHOLESALE_HT, 2)} − 38) ÷ ${fmtN(WHOLESALE_HT, 2)} = ${fmtP((WHOLESALE_HT - COST_REF) / WHOLESALE_HT)}`] } },
+  { id: "m2025", label: "Marge brute 2025 après charges de personnel", m: MARGE_2025, price: PRICE_HT,
+    calc: { formula: "(Marge brute − salaires et charges sociales) ÷ chiffre d'affaires, exercice 2025",
+      assumptions: ["Comptes de l'exercice clos le 31/03/2025 (Pappers)", `Marge brute ${fmtN(PICTURE_2025.margeBrute, 1)} M€ ; salaires et charges sociales ${fmtN(PICTURE_2025.personnel, 2)} M€ ; CA ${fmtN(PICTURE_2025.ca, 1)} M€`, "Taux moyen toutes ventes confondues (gros et direct), appliqué au prix public HT"],
+      steps: [`${fmtN(PICTURE_2025.margeBrute, 1)} − ${fmtN(PICTURE_2025.personnel, 2)} = ${fmtN(PICTURE_2025.margeBrute - PICTURE_2025.personnel, 2)} M€`, `${fmtN(PICTURE_2025.margeBrute - PICTURE_2025.personnel, 2)} ÷ ${fmtN(PICTURE_2025.ca, 1)} = ${fmtP(MARGE_2025)}`, `Avant charges de personnel : ${fmtN(PICTURE_2025.margeBrute, 1)} ÷ ${fmtN(PICTURE_2025.ca, 1)} = ${fmtP(PICTURE_2025.margeBrute / PICTURE_2025.ca)}`] } },
 ];
 
 function simulate(r, m, e) {
@@ -892,19 +890,99 @@ function NumInput({ id, label, value, onChange, suffix, note }) {
   );
 }
 
-const SEASONS = [
-  { id: "pre", label: "Pré-saison", e: -0.65, desc: "Octobre – novembre : besoin d'équipement imminent, demande peu sensible au prix.",
-    calc: { formula: "Élasticité = milieu de la fourchette estimée dans le dossier", assumptions: ["Dossier : demande inélastique à l'approche de l'hiver, élasticité entre −0,5 et −0,8", "L'achat est prioritaire : la remise profite surtout à des clients qui auraient acheté (effet d'aubaine)"], steps: ["(−0,5 + −0,8) ÷ 2 = −0,65", "Une remise de 10 % ferait gagner environ 6,5 % de volume"] } },
-  { id: "saison", label: "Saison", e: -1.1, desc: "Décembre – janvier : pic des ventes, les clients comparent davantage les offres et les remises concurrentes.",
-    calc: { formula: "Élasticité = valeur intermédiaire entre la pré-saison et la fin de saison", assumptions: ["Hypothèse de travail, non chiffrée dans le dossier", "La demande reste forte, mais la concurrence promotionnelle (revendeurs à −30 % / −35 %) rend l'acheteur plus sensible au prix", "Demande proche de l'élasticité unitaire (−1)"], steps: ["Pré-saison −0,65 < Saison ≈ −1,1 < Fin de saison −2", "Une remise de 10 % ferait gagner environ 11 % de volume"] } },
-  { id: "fin", label: "Fin de saison", e: -2, desc: "Février – mars (soldes) : achat différable, demande élastique.",
-    calc: { formula: "Élasticité = milieu de la fourchette retenue pour la fin de saison", assumptions: ["Dossier : en période creuse ou de soldes, la demande redevient élastique car l'achat est différable", "Fourchette hypothétique de −1,5 à −2,5"], steps: ["(−1,5 + −2,5) ÷ 2 = −2", "Une remise de 10 % ferait gagner environ 20 % de volume"] } },
-];
+// Élasticité retenue dans le simulateur = milieu de chaque fourchette (ELASTICITE, data.jsx)
+const midE = ([a, b]) => +((a + b) / 2).toFixed(2);
+const fmtRange = ([a, b]) => `${fmtN(a, 1)} à ${fmtN(b, 1)}`;
+const SEASONS = (() => {
+  const [pre, pleine, post] = ELASTICITE.saisons;
+  const mk = (id, label, short, range, desc, kind) => ({ id, label, short, e: midE(range), desc,
+    calc: { formula: "Élasticité retenue = milieu de la fourchette", assumptions: [`${label} : élasticité ${kind} entre ${fmtRange(range)}`, desc], steps: [`(${fmtN(range[0], 1)} + ${fmtN(range[1], 1)}) ÷ 2 = ${fmtN(midE(range), 2)}`, `Une remise de 10 % ferait gagner environ ${fmtN(-midE(range) * 10, 1)} % de volume`] } });
+  return [
+    mk("pre", "Présaison", "Présaison", pre.prix, "Octobre – novembre : le besoin d'équipement est imminent, la demande est peu sensible au prix.", "-prix"),
+    mk("saison", "Pleine saison, baisse du prix catalogue", "Pleine saison · prix", pleine.prix, "Décembre – janvier : baisse du prix catalogue, sans signal promotionnel ; la demande y est peu sensible.", "-prix"),
+    mk("promo", "Pleine saison, promotion affichée", "Pleine saison · promo", pleine.promo, "Décembre – janvier : remise affichée (prix barré) ; le signal « bonne affaire » déclenche davantage d'achats.", "promotionnelle"),
+    mk("fin", "Post-saison", "Post-saison", post.prix, "Février – mars : l'achat est différable, les clients attendent les soldes ; la demande est élastique.", "-prix"),
+  ];
+})();
+
+// Élasticité au prix catalogue contre élasticité promotionnelle, et ce qu'en dit le questionnaire
+function ElasticityBlock() {
+  const g = ELASTICITE.gg;
+  const dp = (g.p1 - g.p0) / g.p0, dq = (g.q1 - g.q0) / g.q0, eBrute = dq / dp;
+  const [d1, d2] = g.deflation;
+  const ggCalc = { formula: "Élasticité = variation de la demande ÷ variation du prix ; élasticité réelle = élasticité déclarative ÷ coefficient de déflation",
+    assumptions: ["Courbe Gabor-Granger du questionnaire (125 répondants)", `Une intention d'achat déclarée surestime l'achat réel : coefficient de déflation habituel de ${d1} à ${d2}`],
+    steps: [`Prix : (${g.p1} − ${g.p0}) ÷ ${g.p0} = ${fmtP(dp)}`, `Demande : (${fmtN(g.q1 * 100, 0)} − ${fmtN(g.q0 * 100, 0)}) ÷ ${fmtN(g.q0 * 100, 0)} = +${fmtP(dq, 0)}`, `Élasticité déclarative : ${fmtP(dq, 0)} ÷ ${fmtP(dp)} ≈ ${fmtN(eBrute, 0)}`, `Élasticité réelle : ${fmtN(eBrute, 1)} ÷ ${d2} ≈ ${fmtN(eBrute / d2, 1)} ; ${fmtN(eBrute, 1)} ÷ ${d1} ≈ ${fmtN(eBrute / d1, 1)}`] };
+  return (
+    <Section eyebrow="Élasticité-prix" title="Deux élasticités à ne pas confondre : le niveau de prix et le signal promotionnel">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="reco"><span className="reco-ic"><L.Tag size={18} /></span><div><div className="font-semibold">Élasticité au prix catalogue</div><p className="text-sm text-muted mt-1">Sensibilité au niveau de prix facial : la veste coûte-t-elle 195 € ou 179 € ?</p></div></div>
+        <div className="reco"><span className="reco-ic"><L.Percent size={18} /></span><div><div className="font-semibold">Élasticité promotionnelle</div><p className="text-sm text-muted mt-1">Réaction au signal visuel « prix barré / bonne affaire », indépendamment du prix payé.</p></div></div>
+      </div>
+
+      <Panel className="p-5 flex flex-col gap-3">
+        <div className="eyebrow">Ce que dit notre questionnaire (Gabor-Granger)</div>
+        <div className="elas-steps">
+          <div><span className="label">Prix</span><strong className="tabular-nums">{g.p0} € → {g.p1} €</strong><span className="text-sm text-muted tabular-nums">{fmtP(dp)}</span></div>
+          <div><span className="label">Intention d'achat</span><strong className="tabular-nums">{fmtN(g.q0 * 100, 0)} % → {fmtN(g.q1 * 100, 0)} %</strong><span className="text-sm text-muted tabular-nums">+{fmtP(dq, 0)}</span></div>
+          <div><span className="label">Élasticité déclarative</span><strong className="tabular-nums">≈ {fmtN(eBrute, 0)}</strong><span className="text-sm text-muted">intention brute</span></div>
+          <div className="is-key"><span className="label">Élasticité réelle</span><strong className="tabular-nums"><Est title="Élasticité issue du Gabor-Granger" calc={ggCalc}>{fmtN(eBrute / d2, 1)} à {fmtN(eBrute / d1, 1)}</Est></strong><span className="text-sm text-muted">après déflation ÷ {d1} à ÷ {d2}</span></div>
+        </div>
+        <p className="text-sm text-muted">Mesurée hors contexte saisonnier, cette élasticité donne un ordre de grandeur ; selon la période, elle varie comme suit.</p>
+      </Panel>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        {ELASTICITE.saisons.map((s) => (
+          <div key={s.id} className={"season-card" + (s.promo ? " is-peak" : "")}>
+            <div className="font-display text-lg font-semibold">{s.label}</div>
+            <div className="text-xs text-muted">{s.mois}</div>
+            <div className="season-row"><span>Élasticité-prix</span><strong className="tabular-nums">{fmtRange(s.prix)}</strong></div>
+            {s.promo && <div className="season-row is-promo"><span>Élasticité promotionnelle</span><strong className="tabular-nums">{fmtRange(s.promo)}</strong></div>}
+            <p className="text-sm text-muted">{s.txt}</p>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
+// Version A (195 €) contre version B (même prix, 249 € barré) : écarts sur chaque indicateur du questionnaire
+function ABPromoPanel() {
+  const fmtV = (r, v) => r.unit === "€" ? fmtN(v, 2) + " €" : fmtN(v, 2);
+  const pos = (r, v) => ((v - r.min) / (r.max - r.min)) * 100;
+  return (
+    <Panel className="p-5 flex flex-col gap-4">
+      <div>
+        <div className="font-semibold">Version A contre version B : le prix barré est vu, mais il ne fait pas acheter</div>
+        <p className="text-sm text-muted mt-1"><strong className="text-ink">Version A</strong> : l'Abstral au prix catalogue de 195 €, sans promotion. <strong className="text-ink">Version B</strong> : la même veste au même prix réel de 195 €, affichée « 249 € barré » pour simuler une remise (illusion de promotion).</p>
+      </div>
+      <div className="ab-legend-row"><span><i style={{ background: "var(--forest)" }} />Version A · 195 € (n = {SURVEY.groups.A.n})</span><span><i style={{ background: "var(--ocre)" }} />Version B · 249 € barré, 195 € (n = {SURVEY.groups.B.n})</span></div>
+      <div className="flex flex-col gap-5">
+        {SURVEY.ab.map((r) => (
+          <div key={r.k} className="dumbbell">
+            <div className="dumbbell-head">
+              <span className="font-semibold text-sm">{r.k} <span className="text-muted font-normal">({r.unit})</span></span>
+              <span className={"sig-badge" + (r.sig ? " is-sig" : "")}>{r.sig ? "significatif" : "non significatif"} · {r.test}</span>
+            </div>
+            <div className="dumbbell-track" role="img" aria-label={`${r.k} : version A ${fmtV(r, r.A)}, version B ${fmtV(r, r.B)}, ${r.test}`}>
+              <span className="dumbbell-link" style={{ left: Math.min(pos(r, r.A), pos(r, r.B)) + "%", width: Math.abs(pos(r, r.B) - pos(r, r.A)) + "%" }} />
+              <span className="dumbbell-dot dot-a" style={{ left: pos(r, r.A) + "%" }}><em className={r.A <= r.B ? "below-left" : "below-right"}>A {fmtV(r, r.A)}</em></span>
+              <span className="dumbbell-dot dot-b" style={{ left: pos(r, r.B) + "%" }}><em className={r.B < r.A ? "above-left" : "above-right"}>B {fmtV(r, r.B)}</em></span>
+              <span className="dumbbell-min">{r.min}{r.unit === "€" ? " €" : ""}</span><span className="dumbbell-max">{r.max}{r.unit === "€" ? " €" : ""}</span>
+            </div>
+            <div className="text-xs text-muted">{r.note}</div>
+          </div>
+        ))}
+      </div>
+      <p className="text-sm">Le signal promotionnel est très bien perçu (+{fmtN(SURVEY.ab[0].B - SURVEY.ab[0].A, 2)} points), mais il ne change ni la qualité perçue, ni significativement l'intention d'achat, ni le prix jugé trop cher. L'illusion de promotion n'apporte donc pas d'acheteurs supplémentaires : une vraie remise ne ferait que céder de la marge.</p>
+    </Panel>
+  );
+}
 
 function TabPrix({ sim, setSim }) {
   const t = useTokens();
   const open = useContext(CalcCtx);
-  const preset = MARGIN_PRESETS.find((p) => p.id === sim.preset);
+  const preset = MARGIN_PRESETS[0];
   const m = preset.m;
   const r = sim.r / 100;
   const res = simulate(r, m, sim.e);
@@ -919,7 +997,7 @@ function TabPrix({ sim, setSim }) {
     for (let d = 0; d <= 30; d++) {
       const x = d / 100;
       const req = x >= m ? null : x / (m - x);
-      a.push({ d, req: req == null ? null : Math.min(req * 100, 250), pre: -sim.e * d, low: 50 * x * 1, off: 2 * d });
+      a.push({ d, req: req == null ? null : Math.min(req * 100, 250), pre: -sim.e * d, low: 50 * x * 1, off: -SEASONS[3].e * d });
     }
     return a;
   }, [m, sim.e]);
@@ -942,7 +1020,7 @@ function TabPrix({ sim, setSim }) {
   };
   const expCalc = {
     formula: "Variation de volume attendue = −Élasticité × variation de prix",
-    assumptions: ["Élasticité-prix pré-saison estimée entre −0,5 et −0,8 dans le dossier (besoin immédiat d'équipement)", "En fin de saison, la demande redevient élastique (hypothèse −1,5 à −2,5)"],
+    assumptions: ELASTICITE.saisons.map((s) => `${s.label} (${s.mois}) : élasticité-prix ${fmtRange(s.prix)}${s.promo ? `, élasticité promotionnelle ${fmtRange(s.promo)}` : ""}`),
     steps: [`Élasticité retenue : ${fmtN(sim.e, 2)}`, `${fmtN(-sim.e, 2)} × ${fmtP(Math.abs(r))} = ${fmtP(Math.abs(res.exp))} de volume ${isPromo ? "en plus" : "en moins"}`,
       `Marge totale : (1 ${isPromo ? "+" : "−"} ${fmtP(Math.abs(res.exp))}) × ${fmtP(res.unitM)} ÷ ${fmtP(m)} − 1 = ${fmtP(res.dM)}`],
   };
@@ -950,13 +1028,6 @@ function TabPrix({ sim, setSim }) {
   const ok = isPromo ? res.exp >= res.req : res.exp > res.req;
   const verdictTone = r === 0 ? "neutral" : ok ? "good" : "bad";
 
-  // Version A / B
-  const B = sim.b;
-  const PA = P1 / 1.2, PB = B.accepted / 1.2, ceil = B.ceiling / 1.2;
-  const ab = [
-    { name: "Version A", sub: isPromo ? `prix remisé ${fmtN(P1, 2)} €` : `prix ${fmtN(P1, 2)} €`, produit: COST_REF, variation: 0, marge: Math.max(0, PA - COST_REF), prix: PA },
-    { name: "Version B", sub: "avec la variation", produit: COST_REF, variation: B.cost, marge: Math.max(0, PB - COST_REF - B.cost), prix: PB },
-  ];
   const competitors = BRANDS.filter((b) => b.price != null && b.ring === "direct").sort((a, b) => a.price - b.price);
   const maxP = 420;
 
@@ -969,20 +1040,17 @@ function TabPrix({ sim, setSim }) {
               fmt={(v) => (v > 0 ? "+" : "") + v + " %"} hint={<>Prix : <strong className="tabular-nums">{fmtE(P1)}</strong> TTC (base 195 €). Au-dessus de 0 : test d'une hausse.</>} />
             <div className="flex flex-col gap-2">
               <span className="label m-0">Taux de marge initiale</span>
-              {MARGIN_PRESETS.map((p) => (
-                <label key={p.id} className={"radio-row" + (sim.preset === p.id ? " is-on" : "")}>
-                  <input type="radio" name="preset" checked={sim.preset === p.id} onChange={() => setSim({ ...sim, preset: p.id })} />
-                  <span className="flex-1 text-sm">{p.label}</span>
-                  <span className="tabular-nums text-sm font-semibold">{p.est ? <Est title={p.label} calc={p.calc}>{fmtP(p.m)}</Est> : <Src href={SRC.pappersPicture}>{fmtP(p.m)}</Src>}</span>
-                </label>
-              ))}
+              <div className="radio-row is-on cursor-default">
+                <span className="flex-1 text-sm">{preset.label}<span className="block text-xs text-muted"><Src href={SRC.pappersPicture}>comptes 2025</Src></span></span>
+                <span className="tabular-nums text-sm font-semibold"><Est title={preset.label} calc={preset.calc}>{fmtP(m)}</Est></span>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-3"><span className="label m-0">Période de vente (élasticité-prix)</span><span className="font-display font-semibold tabular-nums">{fmtN(sim.e, 2)}</span></div>
-              <div className="seg" role="group" aria-label="Période de vente">
+              <div className="seg seg-2" role="group" aria-label="Période de vente">
                 {SEASONS.map((s) => (
                   <button key={s.id} type="button" className={"seg-btn" + (sim.e === s.e ? " is-on" : "")} aria-pressed={sim.e === s.e} onClick={() => setSim({ ...sim, e: s.e })}>
-                    <span className="font-semibold">{s.label}</span><span className="text-xs tabular-nums">{fmtN(s.e, 2)}</span>
+                    <span className="font-semibold">{s.short}</span><span className="text-xs tabular-nums">{fmtN(s.e, 2)}</span>
                   </button>
                 ))}
               </div>
@@ -1001,7 +1069,7 @@ function TabPrix({ sim, setSim }) {
                 <p className="font-display text-xl md:text-2xl font-semibold text-balance leading-snug">
                   Une remise de {fmtN(res.d * 100, 0)} % nécessite{" "}
                   <Est title="Volume d'équilibre" calc={reqCalc}>{res.req === Infinity ? "un volume infini" : "+" + fmtP(res.req, 0)}</Est>{" "}
-                  de volume pour rester rentable. {({ pre: "La demande d'avant-saison", saison: "En pleine saison, la demande", fin: "En fin de saison, la demande" })[(SEASONS.find((x) => x.e === sim.e) || SEASONS[0]).id]} n'apporterait que{" "}
+                  de volume pour rester rentable. {({ pre: "La demande de présaison", saison: "En pleine saison, la demande", promo: "En pleine saison, même avec une promotion affichée, la demande", fin: "En post-saison, la demande" })[(SEASONS.find((x) => x.e === sim.e) || SEASONS[0]).id]} n'apporterait que{" "}
                   <Est title="Volume attendu" calc={expCalc}>+{fmtP(res.exp, 0)}</Est>.
                 </p>
               ) : (
@@ -1038,7 +1106,7 @@ function TabPrix({ sim, setSim }) {
                     {isPromo && <ReferenceLine x={-sim.r} stroke={t.ocre} strokeDasharray="4 3" />}
                     <Line type="monotone" dataKey="req" name="Volume nécessaire" stroke={t.bad} strokeWidth={2.5} dot={false} isAnimationActive={false} />
                     <Line type="monotone" dataKey="pre" name={`Attendu (${(SEASONS.find((x) => x.e === sim.e) || {}).label || "élasticité"} ${fmtN(sim.e, 2)})`} stroke={t.forest} strokeWidth={2} dot={false} isAnimationActive={false} />
-                    <Line type="monotone" dataKey="off" name="Attendu fin de saison (−2)" stroke={t.sage} strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="off" name={`Attendu post-saison (${fmtN(SEASONS[3].e, 1)})`} stroke={t.sage} strokeWidth={1.5} strokeDasharray="5 4" dot={false} isAnimationActive={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -1048,10 +1116,15 @@ function TabPrix({ sim, setSim }) {
         </div>
       </Section>
 
-      <Section eyebrow="Comparateur concurrentiel" title="Notre prix face aux repères du marché">
+      <ElasticityBlock />
+
+      <Section eyebrow="Comparateur concurrentiel" title="Notre prix face aux concurrents directs">
         <Panel className="p-4">
-          <div className="price-ladder">
+          <div className="price-ladder has-bands">
             <div className={"ladder-marker" + (P1 < P0 ? " left" : "")} style={{ left: `calc(var(--name-w) + 10px + (100% - var(--name-w) - 130px) * ${P1 / maxP})` }}><span>Abstral {fmtN(P1, 2)} €</span></div>
+            {[[SURVEY.kpi.zoneLo, SURVEY.kpi.zoneHi, "accepted", `${SURVEY.kpi.zoneLo}–${SURVEY.kpi.zoneHi} €`], [180, 200, "rivals", "180–200 €"]].map(([lo, hi, k, l]) => (
+              <div key={k} className={"ladder-band band-" + k} style={{ left: `calc(var(--name-w) + 10px + (100% - var(--name-w) - 130px) * ${lo / maxP})`, width: `calc((100% - var(--name-w) - 130px) * ${(hi - lo) / maxP})` }}><span>{l}</span></div>
+            ))}
             {r !== 0 && <div className="ladder-marker ghost" style={{ left: `calc(var(--name-w) + 10px + (100% - var(--name-w) - 130px) * ${P0 / maxP})` }}><span>195 €</span></div>}
             {competitors.map((b) => (
               <div key={b.id} className="ladder-row">
@@ -1065,48 +1138,13 @@ function TabPrix({ sim, setSim }) {
             <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px solid var(--ocre)" }} />Prix simulé de l'Abstral ({fmtN(P1, 2)} €) : le prix catalogue de 195 € auquel on applique la variation choisie plus haut dans le simulateur ({sim.r > 0 ? "+" : ""}{sim.r} %)</span>
             {r !== 0 && <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px dashed var(--muted)" }} />Prix catalogue de l'Abstral (195 €)</span>}
             <span className="flex items-center gap-2"><span className="lg-bar ring-bg-direct" />Prix public d'une veste concurrente directe (cliquez sur le prix pour la fiche produit)</span>
+            <span className="flex items-center gap-2"><span className="lg-bar band-accepted" />Prix accepté par les répondants (100 – 130 €)</span>
+            <span className="flex items-center gap-2"><span className="lg-bar band-rivals" />Prix des concurrents proches (180 – 200 €)</span>
           </div>
-          <p className="text-xs text-muted mt-2">Seuil de qualité perçue ≈ 130 – 140 € (Simond MT900, TNF Antora). Zone d'acceptabilité 180 – 200 €. Au-delà de 200 – 220 €, la veste affronte les 3 couches.</p>
+          <p className="text-xs text-muted mt-2">Concurrents directs uniquement, classés par prix. Les concurrents proches se situent entre 180 et 200 € : c'est aussi le seuil où la moitié des répondants jugent déjà la veste trop chère ({SURVEY.kpi.medTropCher} €). Le prix réellement accepté par les répondants se situe plutôt entre {SURVEY.kpi.zoneLo} et {SURVEY.kpi.zoneHi} € (Van Westendorp). Au-delà de 200 – 220 €, la veste affronte les 3 couches.</p>
         </Panel>
 
-        <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
-          <Panel className="p-4">
-            <div className="font-semibold text-sm mb-1">Version A contre Version B, montants HT par veste</div>
-            <p className="text-xs text-muted mb-2">A = l'Abstral au prix simulé. B = l'Abstral + une variation (service ou accessoire) vendue au prix accepté dans le questionnaire.</p>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ab} margin={{ top: 24, right: 16, left: 0, bottom: 4 }} barCategoryGap="35%">
-                  <CartesianGrid stroke={t.line} strokeDasharray="2 4" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: t.ink, fontSize: 12, fontWeight: 600 }} axisLine={{ stroke: t.line }} tickLine={false} />
-                  <YAxis tick={{ fill: t.muted, fontSize: 11 }} tickFormatter={(v) => v + " €"} axisLine={false} tickLine={false} width={52} domain={[0, 200]} ticks={[0, 50, 100, 150, 200]} />
-                  <Tooltip cursor={{ fill: t.surface2 }} content={({ active, payload }) => active && payload ? (
-                    <div className="chart-tip"><strong>{payload[0].payload.name}</strong>{payload.filter((p) => p.value > 0).map((p) => <div key={p.dataKey} className="tabular-nums">{p.name} : {fmtE(p.value)}</div>)}<div className="tabular-nums">Prix accepté HT : {fmtE(payload[0].payload.prix)}</div></div>) : null} />
-                  <ReferenceLine y={ceil} stroke={t.ink} strokeDasharray="6 4" label={{ value: `plafond concurrents ${fmtN(ceil, 2)} € HT`, position: "insideBottomLeft", fill: t.ink, fontSize: 11 }} />
-                  <Bar dataKey="produit" name="Produit (coût)" stackId="s" fill={t.slate} isAnimationActive={false} />
-                  <Bar dataKey="variation" name="Variation" stackId="s" fill={t.ocre} isAnimationActive={false} />
-                  <Bar dataKey="marge" name="Marge" stackId="s" fill={t.sage} isAnimationActive={false} radius={[3, 3, 0, 0]}>
-                    <LabelList dataKey="prix" position="top" formatter={(v) => "accepté " + fmtN(v, 2) + " €"} style={{ fill: t.ink, fontSize: 11, fontWeight: 600 }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-sm mt-2">
-              {(() => {
-                const mA = PA - COST_REF, mB = PB - COST_REF - B.cost;
-                const gain = mB - mA;
-                return gain >= 0
-                  ? <>La variation coûte {fmtE(B.cost)} et fait accepter {fmtE(PB - PA)} HT de plus : elle rapporte <strong>{fmtE(gain)}</strong> de marge par veste{PB > ceil ? ", mais dépasse le plafond concurrentiel." : " et reste sous le plafond."}</>
-                  : <>La variation coûte plus qu'elle ne fait accepter : <strong>{fmtE(gain)}</strong> de marge par veste.</>;
-              })()}
-            </p>
-          </Panel>
-          <Panel className="p-5 flex flex-col gap-4">
-            <NumInput id="bcost" label="Coût de la variation" value={B.cost} onChange={(v) => setSim({ ...sim, b: { ...B, cost: v } })} suffix="€ HT" note="Hypothèse : kit de réparation + extension de garantie." />
-            <NumInput id="bacc" label="Prix accepté pour la Version B" value={B.accepted} onChange={(v) => setSim({ ...sim, b: { ...B, accepted: v } })} suffix="€ TTC"
-              note={<>Par défaut : prix maximal médian du questionnaire (N = {SURVEY.n}) <button type="button" className="link-btn" onClick={() => setSim({ ...sim, b: { ...B, accepted: SURVEY.kpi.medTropCher } })}>reprendre {SURVEY.kpi.medTropCher} €</button></>} />
-            <NumInput id="bceil" label="Plafond des concurrents" value={B.ceiling} onChange={(v) => setSim({ ...sim, b: { ...B, ceiling: v } })} suffix="€ TTC" note="Dossier : au-delà de 200 – 220 €, la veste affronte les 3 couches." />
-          </Panel>
-        </div>
+        <ABPromoPanel />
       </Section>
     </div>
   );
@@ -1173,7 +1211,7 @@ function VWChart() {
           <div key={k}><span className="font-semibold">{k} {v} €</span><span className="text-muted"> · {l}</span></div>
         ))}
       </div>
-      <p className="text-xs text-muted">Bande verte : zone de prix acceptable ({pts.pmc}–{pts.pme} €). Courbes relevées sur le graphique du dossier, à ± 1 point.</p>
+      <p className="text-xs text-muted">Bande verte : zone acceptable au sens strict, du point marginal de bon marché ({pts.pmc} €) au point marginal de cherté ({pts.pme} €). Le prix réellement accepté se concentre entre le prix optimal ({pts.opp} €) et le point de cherté ({pts.pme} €). Courbes relevées sur le graphique du dossier, à ± 1 point.</p>
     </>
   );
 }
@@ -1270,7 +1308,7 @@ function TabQuestionnaire({ go }) {
           <Kpi label="Qualité perçue" v={<>{fmtN(k.quality, 2)}<span className="text-base text-muted">/5</span></>} sub="la veste convainc" tone="good" />
           <Kpi label="Achèteraient à 195 €" v={pct0(k.buy195)} sub="intention d'achat" tone="bad" />
           <Kpi label="« Trop cher » médian" v={k.medTropCher + " €"} sub="sous le prix de 195 €" tone="bad" />
-          <Kpi label="Zone acceptable" v={k.zoneLo + "–" + k.zoneHi + " €"} sub="Van Westendorp" tone="warn" />
+          <Kpi label="Prix accepté" v={k.zoneLo + "–" + k.zoneHi + " €"} sub="du prix optimal au point de cherté" tone="warn" />
         </div>
       </div>
 
@@ -1282,14 +1320,26 @@ function TabQuestionnaire({ go }) {
         </div>
       </Section>
 
-      <Section eyebrow="Résultat 2" title="La promotion affichée n'a aucun effet">
-        <p className="text-sm max-w-prose">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>.</p>
+      <Section eyebrow="Résultat 2" title="La promotion affichée n'a pas d'effet significatif">
+        <div className="grid lg:grid-cols-2 gap-4">
+          <Panel className="p-5 flex flex-col gap-2 text-sm">
+            <div className="eyebrow">Hypothèses testées</div>
+            <p><strong>H0 (hypothèse nulle)</strong> : l'affichage d'une promotion (prix barré) n'a pas d'effet significatif sur la qualité perçue ni sur l'intention d'achat de la veste Abstral.</p>
+            <p><strong>H1 (hypothèse alternative)</strong> : l'affichage d'une promotion (prix barré) augmente significativement la valeur / qualité perçue et l'intention d'achat de la veste Abstral.</p>
+          </Panel>
+          <Panel className="p-5 flex flex-col gap-2 text-sm">
+            <div className="eyebrow">Le test A/B a fonctionné (manipulation check)</div>
+            <p>Le signal promotionnel a bien été perçu : le groupe exposé à la version en promotion (B) a jugé l'offre significativement plus en promotion que le groupe exposé à la version standard (A) : <strong>4,31 contre 2,08 sur 5</strong> (<em>t</em> de Welch = −14,33, <em>p</em> &lt; 0,001, <em>d</em> = 2,52).</p>
+            <p className="text-muted">Les écarts observés ci-dessous viennent donc bien du prix barré, et non d'un affichage passé inaperçu.</p>
+          </Panel>
+        </div>
+        <p className="text-sm max-w-prose">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain significatif d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>. Le groupe B affiche 12 % d'intention positive contre 8 % pour A : l'écart n'est pas significatif, mais il n'est pas strictement nul. Pour la qualité perçue, en revanche, l'absence d'effet est établie (3,95 contre 3,95, test d'équivalence).</p>
         <div className="grid lg:grid-cols-2 gap-6">
           <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse"><IntentChart /></ChartPanel>
           <ChartPanel title="Qualité perçue, A contre B" sub="Score moyen sur 5 (moyenne des 5 items)">
             <ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" />
             <div className="text-sm flex flex-col gap-2 mt-1">
-              <p>Pour tester H1 sur la valeur perçue, nous avons comparé le score de qualité perçue (moyenne des 5 items, α = 0,84) entre les deux versions.</p>
+              <p>Pour tester H1 sur la valeur perçue, nous avons comparé le score de qualité perçue (moyenne des 5 items, α = 0,86) entre les deux versions.</p>
               <p>Les scores sont identiques : 3,95 en A et 3,95 en B (test t de Welch, t(99,1) = 0,02, p = 0,99, d = 0,00 ; IC à 95 % de l'écart : −0,18 à +0,18). Un test d'équivalence montre que l'effet éventuel de la promotion est inférieur à d = 0,4 (p = 0,018).</p>
               <p>L'engagement des répondants ne modère pas cet effet (p = 0,83). Afficher une promotion n'améliore donc pas l'image de qualité de la veste, mais ne la dégrade pas non plus. <strong>H1 est rejetée pour la valeur perçue.</strong></p>
             </div>
@@ -1320,17 +1370,21 @@ function TabQuestionnaire({ go }) {
 // =========================================================
 function TabSynthese({ go }) {
   const m = MARGIN_PRESETS[0].m;
-  const rows = [10, 15, 20, 30].map((d) => ({ ...simulate(-d / 100, m, -0.65), pct: d, lo: simulate(-d / 100, m, -0.5), hi: simulate(-d / 100, m, -0.8) }));
+  const [pre, pleine, post] = ELASTICITE.saisons;
+  const rows = [10, 15, 20, 30].map((d) => ({ ...simulate(-d / 100, m, midE(pre.prix)), pct: d,
+    lo: simulate(-d / 100, m, pre.prix[0]), hi: simulate(-d / 100, m, pre.prix[1]),
+    pLo: simulate(-d / 100, m, pleine.promo[0]), pHi: simulate(-d / 100, m, pleine.promo[1]) }));
   const r15 = rows[1];
+  const pp = (v) => fmtN(v * 100, 1);
   const jump = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
   const args = [
-    { id: "syn-eco", h: "Économique", ic: <L.Calculator size={18} />, p: <>−15 % exige <strong>+{fmtP(r15.req, 0)}</strong> de volume ; on attend +8 à +12 %.</> },
+    { id: "syn-eco", h: "Économique", ic: <L.Calculator size={18} />, p: <>Avec une marge de {fmtP(m)} (2025, après personnel), −15 % exige <strong>+{fmtP(r15.req, 0)}</strong> de volume ; on attend +{fmtP(r15.lo.exp, 0)} à +{fmtP(r15.hi.exp, 0)} en présaison, +{fmtP(r15.pLo.exp, 0)} à +{fmtP(r15.pHi.exp, 0)} avec une promotion affichée en pleine saison.</> },
     { id: "syn-fin", h: "Financier", ic: <L.Landmark size={18} />, p: <>Capitaux propres négatifs, <strong>1,18 M€</strong> de trésorerie.</> },
-    { id: "syn-cli", h: "Clients", ic: <L.Users size={18} />, p: <>La promotion ne fait <strong>ni acheter ni mieux percevoir</strong>.</> },
+    { id: "syn-cli", h: "Clients", ic: <L.Users size={18} />, p: <>Le prix barré est bien perçu, mais <strong>ne fait ni acheter significativement ni mieux percevoir</strong>.</> },
   ];
   const plan = [
-    { when: "Nov.–déc.", items: [
-      ["Tenir 195 €", "Juste sous la barre psychologique des 200 €, dans la zone 180–200 € des 2,5 couches éco-conçues.", <L.Lock size={18} />],
+    { when: "Présaison et pleine saison (oct. – janv.)", items: [
+      ["Tenir 195 €", "Juste sous la barre psychologique des 200 €, dans la zone 180 – 200 € des concurrents directs proches (Millet, Vaude, Salomon, Patagonia, Burton).", <L.Lock size={18} />],
       ["Communiquer sur la technicité", "Membrane 20K/20K, sans PFC : c'est l'imperméabilité qui fait acheter.", <L.Droplets size={18} />],
       ["Offres groupées", "Abstral + pantalon ou sous-couche : la remise porte sur le panier, pas sur la veste phare.", <L.Package size={18} />],
       ["Avantages réservés aux membres", "Programme Circular, reprise d'une ancienne veste : récompenser la fidélité sans casser le prix public.", <L.BadgeCheck size={18} />],
@@ -1338,8 +1392,8 @@ function TabSynthese({ go }) {
     { when: "Avant la saison", items: [
       ["Encadrer les démarques des revendeurs", "Le prix constaté à −35 % chez un revendeur majeur dégrade la valeur perçue : revoir les conditions de démarque avec les distributeurs.", <L.Handshake size={18} />],
     ] },
-    { when: "Janv.–févr.", items: [
-      ["Remiser les invendus de 10 à 15 %", "Après le pic, la demande redevient élastique (≈ −2) : la remise devient défendable et libère de la trésorerie.", <L.CalendarClock size={18} />],
+    { when: `Post-saison (${post.mois.replace(" – ", " – ")})`, items: [
+      ["Remiser les invendus de 10 à 15 %", `Après le pic, la demande redevient élastique (${fmtRange(post.prix)}) : la remise devient défendable et libère de la trésorerie.`, <L.CalendarClock size={18} />],
     ] },
   ];
   return (
@@ -1363,17 +1417,18 @@ function TabSynthese({ go }) {
         <Section eyebrow="Argument économique" title={`Une remise de 15 % exige +${fmtP(r15.req, 0)} de volume, la demande n'en apporte que +8 à +12 %`}>
           <div className="table-wrap">
             <table className="data-table">
-              <thead><tr><th>Remise</th><th className="text-right">Volume nécessaire</th><th className="text-right">Volume attendu (pré-saison)</th><th className="text-right">Marge totale</th><th className="text-right">Élasticité requise</th></tr></thead>
+              <thead><tr><th>Remise</th><th className="text-right">Volume nécessaire</th><th className="text-right">Volume attendu (présaison)</th><th className="text-right">Volume attendu (pleine saison, promotion affichée)</th><th className="text-right">Marge totale (présaison)</th><th className="text-right">Élasticité requise</th></tr></thead>
               <tbody>{rows.map((r) => (
                 <tr key={r.pct}>
                   <td className="font-semibold">−{r.pct} %</td>
-                  <td className="text-right tabular-nums text-bad font-semibold">{r.pct === 15 ? <Est title="Volume d'équilibre à −15 %" calc={{ formula: "ΔQ/Q = r ÷ (m − r)", assumptions: ["m = 45,8 % (marge brute Picture 2026)", "r = 15 %"], steps: ["15 ÷ (45,8 − 15) = 15 ÷ 30,8 = 48,7 %"] }}>+{fmtP(r.req, 0)}</Est> : <>+{fmtP(r.req, 0)}</>}</td>
-                  <td className="text-right tabular-nums">{r.pct === 15 ? <Est title="Volume attendu à −15 %" calc={{ formula: "ΔQ/Q = −e × r", assumptions: ["Élasticité pré-saison −0,5 à −0,8 (dossier)"], steps: ["0,5 × 15 % = 7,5 %", "0,8 × 15 % = 12 %"] }}>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</Est> : <>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</>}</td>
+                  <td className="text-right tabular-nums text-bad font-semibold">{r.pct === 15 ? <Est title="Volume d'équilibre à −15 %" calc={{ formula: "ΔQ/Q = r ÷ (m − r)", assumptions: [`m = ${fmtP(m)} (marge brute 2025 après charges de personnel)`, "r = 15 %"], steps: [`15 ÷ (${pp(m)} − 15) = 15 ÷ ${pp(m - 0.15)} = ${fmtP(r15.req)}`] }}>+{fmtP(r.req, 0)}</Est> : <>+{fmtP(r.req, 0)}</>}</td>
+                  <td className="text-right tabular-nums">{r.pct === 15 ? <Est title="Volume attendu à −15 %" calc={{ formula: "ΔQ/Q = −e × r", assumptions: [`Élasticité-prix de présaison ${fmtRange(pre.prix)}`], steps: [`${fmtN(-pre.prix[0], 1)} × 15 % = ${fmtP(r15.lo.exp)}`, `${fmtN(-pre.prix[1], 1)} × 15 % = ${fmtP(r15.hi.exp)}`] }}>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</Est> : <>+{fmtP(r.lo.exp, 0)} à +{fmtP(r.hi.exp, 0)}</>}</td>
+                  <td className="text-right tabular-nums">+{fmtP(r.pLo.exp, 0)} à +{fmtP(r.pHi.exp, 0)}</td>
                   <td className="text-right tabular-nums">{fmtP(r.lo.dM, 0)} à {fmtP(r.hi.dM, 0)}</td>
                   <td className="text-right tabular-nums">{fmtN(r.beE, 1)}</td>
                 </tr>))}</tbody>
             </table>
-            <p className="text-xs text-muted mt-2 px-1">Base : marge brute Picture 2026 de 45,8 % (<Src href={SRC.pappersPicture}>Pappers</Src>). Avec la marge en vente directe (76,6 %), une remise de 15 % demande encore +24 % de volume, pour +8 à +12 % attendus.</p>
+            <p className="text-xs text-muted mt-2 px-1">Base : marge brute 2025 après charges de personnel, {fmtP(m)} ({fmtN(PICTURE_2025.margeBrute, 1)} M€ de marge brute − {fmtN(PICTURE_2025.personnel, 2)} M€ de salaires et charges sociales, sur {fmtN(PICTURE_2025.ca, 1)} M€ de CA ; <Src href={SRC.pappersPicture}>Pappers</Src>). Élasticités : présaison {fmtRange(pre.prix)} ; pleine saison {fmtRange(pleine.prix)} au prix catalogue et {fmtRange(pleine.promo)} pour une promotion affichée. Même avec l'élasticité promotionnelle, le volume attendu reste très loin du volume nécessaire.</p>
           </div>
         </Section>
       </div>
@@ -1381,10 +1436,10 @@ function TabSynthese({ go }) {
       <div id="syn-fin" className="scroll-mt-24"><FinCompare /></div>
 
       <div id="syn-cli" className="scroll-mt-24">
-        <Section eyebrow="Argument clients" title="Les clients ne réagissent pas à la promotion">
+        <Section eyebrow="Argument clients" title="Les clients ne réagissent pas significativement à la promotion">
           <div className="reco items-center">
             <span className="reco-ic"><L.ClipboardList size={18} /></span>
-            <p className="flex-1 text-sm">La qualité de la veste est reconnue, mais c'est le prix qui freine l'achat. Afficher une promotion ne change ni l'intention d'achat ni l'image du produit.</p>
+            <p className="flex-1 text-sm">La qualité de la veste est reconnue, mais c'est le prix qui freine l'achat : les répondants acceptent plutôt 100 à 130 €. Le prix barré a bien été perçu (manipulation check, p &lt; 0,001), mais il ne produit ni gain significatif d'intention (p = 0,29) ni gain d'image (p = 0,99).</p>
             <button className="btn ghost" onClick={() => go("questionnaire")}>Voir le Questionnaire →</button>
           </div>
         </Section>
@@ -1392,7 +1447,7 @@ function TabSynthese({ go }) {
 
       <Section eyebrow="Analyse des risques" title="L'hiver est le pire moment pour remiser">
         <div className="grid md:grid-cols-3 gap-4">
-          <Risk icon={<L.TrendingDown size={18} />} title="La demande est peu sensible au prix">À l'approche de l'hiver, le besoin est immédiat. La baisse de prix profite surtout à des clients qui auraient acheté de toute façon (effet d'aubaine).</Risk>
+          <Risk icon={<L.TrendingDown size={18} />} title="La demande est peu sensible à la promotion">À l'approche de l'hiver, le besoin est immédiat et le prix barré ne fait pas acheter davantage. La remise profite surtout à des clients qui auraient acheté de toute façon (effet d'aubaine).</Risk>
           <Risk icon={<L.ShieldAlert size={18} />} title="La promotion ne crée pas de valeur">Le questionnaire le montre : une promotion affichée ne change pas la valeur perçue de la veste. La remise ne ferait que céder de la marge.</Risk>
           <Risk icon={<L.Tag size={18} />} title="Les revendeurs remisent déjà">L'Abstral est déjà à <Src href={SRC.snowleader}>126,90 € chez Snowleader</Src> (−35 %). Une promotion de marque s'ajouterait à celles des revendeurs.</Risk>
         </div>
@@ -1459,7 +1514,7 @@ function FinCompare() {
       </div>
       <p className="text-xs text-muted">* Patagonia : résultat net plafonné par le contrat de franchise avec la maison mère ; son résultat avant redevance atteint 46,9 M€ (19,3 % du CA). Picture 2025 : dettes financières de 10,7 M€ et incertitude significative sur la continuité d'exploitation selon le commissaire aux comptes.</p>
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="reco"><span className="reco-ic"><L.ShieldCheck size={18} /></span><div><div className="font-semibold">Avec des fonds, la promotion est un choix possible</div><p className="text-sm text-muted mt-1">K-Way dégage 7 M€ de bénéfice avec une marge commerciale de 67,7 % et finance 81 % de son bilan par ses fonds propres. Patagonia et Millet n'ont aucune dette et disposent de 12 à 16 M€ de liquidités. Pour eux, la même remise ne représente que 2 à 7 % de leurs capitaux propres : ils peuvent l'utiliser pour gagner des parts de marché, écouler un stock ou contrer un concurrent, puis revenir au prix plein.</p></div></div>
+        <div className="reco"><span className="reco-ic"><L.ShieldCheck size={18} /></span><div><div className="font-semibold">Avec des fonds, la promotion est un choix possible</div><p className="text-sm text-muted mt-1">K-Way dégage 7 M€ de bénéfice avec une marge commerciale de 67,7 % et finance 81 % de son bilan par ses fonds propres. Patagonia et Millet n'ont aucune dette et disposent de 12 à 16 M€ de liquidités. Pour eux, la même remise ne représente que moins de 2 % à 7 % de leurs capitaux propres : ils peuvent l'utiliser pour gagner des parts de marché, écouler un stock ou contrer un concurrent, puis revenir au prix plein.</p></div></div>
         <div className="reco" style={{ borderColor: "color-mix(in srgb, var(--bad) 40%, var(--line))" }}><span className="reco-ic" style={{ background: "color-mix(in srgb, var(--bad) 14%, transparent)", color: "var(--bad)" }}><L.AlertTriangle size={18} /></span><div><div className="font-semibold">Pour Picture, elle mettrait l'entreprise en danger</div><p className="text-sm text-muted mt-1">La même opération coûterait environ 0,41 M€, soit plus d'un tiers de la trésorerie restante (1,18 M€), et porterait la perte de 2,63 M€ à plus de 3 M€. Avec des capitaux propres déjà négatifs et 10,7 M€ de dettes financières, l'entreprise n'a aucune réserve pour l'absorber. La promotion pèserait directement sur le plan de redressement et sur le soutien des banques.</p></div></div>
       </div>
     </Section>
@@ -1495,7 +1550,7 @@ function App() {
   const initial = (() => { const h = (location.hash || "").replace("#", ""); return TABS.some((t) => t.id === h) ? h : "presentation"; })();
   const [tab, setTab] = useState(initial);
   const [calc, setCalc] = useState(null);
-  const [sim, setSim] = useState({ r: -15, preset: "compta", e: -0.65, q0: 2000, b: { cost: 6, accepted: SURVEY.kpi.medTropCher, ceiling: 220 } });
+  const [sim, setSim] = useState({ r: -15, e: SEASONS[0].e, q0: 2000 });
   const go = (id) => { setTab(id); try { history.replaceState(null, "", "#" + id); } catch (e) {} window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" }); };
   useEffect(() => { const f = () => { const h = location.hash.replace("#", ""); if (TABS.some((t) => t.id === h)) setTab(h); }; window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
 
