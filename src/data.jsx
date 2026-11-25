@@ -641,10 +641,10 @@ const SURVEY = {
   n: 125,
   groups: {
     A: { label: "Version A", desc: "prix affiché 195 €", n: 74 },
-    B: { label: "Version B", desc: "249 € barré, 195 €", n: 51 },
+    B: { label: "Version B", desc: "245 € barré, 195 €", n: 51 },
   },
   measures: "prix acceptables (Van Westendorp), intention d'achat (méthode Gabor-Granger et échelle à 4 niveaux à 195 €), qualité perçue, engagement",
-  kpi: { quality: 3.95, buy195: 0.10, medTropCher: 180, zoneLo: 100, zoneHi: 130 },
+  kpi: { quality: 3.95, buy195: 0.10, medTropCher: 180, zoneLo: 94, zoneHi: 130 },
   tests: { manip: "p < 0,001", intent: "p = 0,29", quality: "p = 0,99" },
 
   // Van Westendorp, toutes versions : part cumulée (%) par prix, lue sur la courbe du dossier
@@ -656,7 +656,7 @@ const SURVEY = {
 
   // Intention d'achat à 195 € : effectifs Non / Probablement pas / Probablement / Oui certainement
   intent195: { levels: ["Non", "Probablement pas", "Probablement", "Oui certainement"], A: [51, 17, 4, 2], B: [30, 15, 4, 2], meanA: 1.42, meanB: 1.57, test: "t(99,6) = −1,06 ; p = 0,29" },
-  // Version A (195 €) contre version B (249 € barré, 195 €) : moyennes et tests de Welch
+  // Version A (195 €) contre version B (245 € barré, 195 €) : moyennes et tests de Welch
   ab: [
     { k: "Promotion perçue", unit: "/ 5", min: 1, max: 5, A: 2.08, B: 4.31, test: "t = −14,33 ; p < 0,001 ; d = 2,52", sig: true, note: "le prix barré est bien vu" },
     { k: "Qualité perçue", unit: "/ 5", min: 1, max: 5, A: 3.95, B: 3.95, test: "p = 0,99 ; équivalence p = 0,018", sig: false, note: "aucun effet" },
@@ -665,13 +665,4 @@ const SURVEY = {
   ],
   // Qualité perçue moyenne (/5) par groupe (moyenne des 5 items)
   qualityAB: { A: 3.95, B: 3.95 },
-  // Méthodologie détaillée (texte du dossier)
-  detail: [
-    ["Équilibre des groupes A / B", "Âge : t(115,3) = −0,08 ; p = 0,94. Genre : χ²(1) = 0,55 ; p = 0,46. Niveau de pratique : écart non significatif."],
-    ["Perception de la promotion", "Note de promotion 2,08 (A) contre 4,31 (B) sur 5 ; t(118,7) = −14,33 ; p < 0,001 ; d = 2,52."],
-    ["Fiabilité (alpha de Cronbach)", "Qualité perçue 0,86 ; engagement 0,91 (seuil 0,70). Fiabilité composite identique."],
-    ["Validité", "AVE 0,56 et 0,67 (seuil 0,50) ; HTMT 0,16 (maximum 0,85)."],
-    ["Analyse factorielle confirmatoire", "χ²(34) = 46,9 (p = 0,07) ; CFI 0,977 ; TLI 0,969 ; RMSEA 0,062 ; SRMR 0,053. Le RMSEA est calculé sur les 100 répondants pratiquant l'outdoor (échantillon des échelles) : √((46,9 − 34) ÷ (34 × 99)) = 0,062 ; sur N = 125, il serait de 0,055. Poids de 0,59 à 0,91."],
-    ["Effet sur l'intention / la qualité", "p = 0,29 / p = 0,99"],
-  ],
 };

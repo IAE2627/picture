@@ -995,7 +995,7 @@ function ElasticityBlock() {
   );
 }
 
-// Version A (195 €) contre version B (même prix, 249 € barré) : écarts sur chaque indicateur du questionnaire
+// Version A (195 €) contre version B (même prix, 245 € barré) : écarts sur chaque indicateur du questionnaire
 function ABPromoPanel() {
   const fmtV = (r, v) => r.unit === "€" ? fmtN(v, 2) + " €" : fmtN(v, 2);
   const pos = (r, v) => ((v - r.min) / (r.max - r.min)) * 100;
@@ -1003,9 +1003,9 @@ function ABPromoPanel() {
     <Panel className="p-5 flex flex-col gap-4">
       <div>
         <div className="font-semibold">Version A contre version B : le prix barré est vu, mais il ne fait pas acheter</div>
-        <p className="text-sm text-muted mt-1"><strong className="text-ink">Version A</strong> : l'Abstral au prix catalogue de 195 €, sans promotion. <strong className="text-ink">Version B</strong> : la même veste au même prix réel de 195 €, affichée « 249 € barré » pour simuler une remise (illusion de promotion).</p>
+        <p className="text-sm text-muted mt-1"><strong className="text-ink">Version A</strong> : l'Abstral au prix catalogue de 195 €, sans promotion. <strong className="text-ink">Version B</strong> : la même veste au même prix réel de 195 €, affichée « 245 € barré » pour simuler une remise (illusion de promotion).</p>
       </div>
-      <div className="ab-legend-row"><span><i style={{ background: "var(--forest)" }} />Version A · 195 € (n = {SURVEY.groups.A.n})</span><span><i style={{ background: "var(--ocre)" }} />Version B · 249 € barré, 195 € (n = {SURVEY.groups.B.n})</span></div>
+      <div className="ab-legend-row"><span><i style={{ background: "var(--forest)" }} />Version A · 195 € (n = {SURVEY.groups.A.n})</span><span><i style={{ background: "var(--ocre)" }} />Version B · 245 € barré, 195 € (n = {SURVEY.groups.B.n})</span></div>
       <div className="flex flex-col gap-5">
         {SURVEY.ab.map((r) => (
           <div key={r.k} className="dumbbell">
@@ -1192,7 +1192,7 @@ function TabPrix({ sim, setSim }) {
             <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px solid var(--ocre)" }} />Prix simulé de l'Abstral ({fmtN(P1, 2)} €) : le prix catalogue de 195 € auquel on applique la variation choisie plus haut dans le simulateur ({sim.r > 0 ? "+" : ""}{sim.r} %)</span>
             {r !== 0 && <span className="flex items-center gap-2"><span className="lg-line" style={{ borderLeft: "2px dashed var(--muted)" }} />Prix catalogue de l'Abstral (195 €)</span>}
             <span className="flex items-center gap-2"><span className="lg-bar ring-bg-direct" />Prix public d'une veste concurrente directe (cliquez sur le prix pour la fiche produit)</span>
-            <span className="flex items-center gap-2"><span className="lg-bar band-accepted" />Prix accepté par les répondants (100 – 130 €)</span>
+            <span className="flex items-center gap-2"><span className="lg-bar band-accepted" />Prix accepté par les répondants ({SURVEY.kpi.zoneLo} – {SURVEY.kpi.zoneHi} €)</span>
             <span className="flex items-center gap-2"><span className="lg-bar band-rivals" />Prix des concurrents proches (180 – 200 €)</span>
           </div>
           <p className="text-xs text-muted mt-2">Concurrents directs uniquement, classés par prix. Les concurrents proches se situent entre 180 et 200 € : c'est aussi le seuil où la moitié des répondants jugent déjà la veste trop chère ({SURVEY.kpi.medTropCher} €). Le prix réellement accepté par les répondants se situe plutôt entre {SURVEY.kpi.zoneLo} et {SURVEY.kpi.zoneHi} € (Van Westendorp). Au-delà de 200 – 220 €, la veste affronte les 3 couches.</p>
@@ -1254,11 +1254,15 @@ function VWChart() {
             <XAxis dataKey="p" type="number" domain={[0, 300]} ticks={[0, 50, 100, 150, 200, 250, 300]} tickFormatter={(v) => v + " €"} {...axisProps(t)} />
             <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={(v) => v + " %"} tick={{ fill: t.muted, fontSize: 11 }} axisLine={false} tickLine={false} width={48} />
             <Tooltip content={({ active, payload, label }) => active && payload ? <Tip head={label + " €"} lines={payload.map((p) => p.name + " : " + p.value + " %")} /> : null} />
-            <Legend wrapperStyle={{ fontSize: 12 }} formatter={(v) => <span style={{ color: t.muted }}>{v}</span>} />
             <ReferenceLine x={195} stroke={t.bad} strokeDasharray="4 3" label={{ value: "195 €", fill: t.bad, fontSize: 11, position: "top" }} />
             {series.map((s) => <Line key={s.k} type="stepAfter" dataKey={s.k} name={s.n} stroke={s.c} strokeWidth={2} strokeDasharray={s.dash} dot={false} isAnimationActive={false} />)}
           </LineChart>
         </ResponsiveContainer>
+      </div>
+      <div className="vw-legend">
+        {series.map((s) => (
+          <span key={s.k}><svg width="30" height="10" aria-hidden="true"><line x1="1" y1="5" x2="29" y2="5" stroke={s.c} strokeWidth="2.5" strokeDasharray={s.dash} /></svg>{s.n} : {s.dash ? "pointillés" : "trait plein"} {s.c === t.forest ? (s.dash ? "verts" : "vert") : "orange"}</span>
+        ))}
       </div>
       <div className="vw-points">
         {[["PMC", pts.pmc, "point marginal de bon marché"], ["OPP", pts.opp, "prix optimal"], ["IPP", pts.ipp, "prix d'indifférence"]].map(([k, v, l]) => (
@@ -1390,25 +1394,19 @@ function TabQuestionnaire({ go }) {
         <div className="grid lg:grid-cols-2 gap-6">
           <ChartPanel title="Intention d'achat à 195 €, A contre B" sub="Part des répondants par réponse">
             <IntentChart />
-            <p className="text-sm mt-1">Afficher « 249 € barré » au lieu de 195 € ne produit <strong>ni gain significatif d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>. Le groupe B affiche 12 % d'intention positive contre 8 % pour A : l'écart n'est pas significatif, mais il n'est pas strictement nul. Pour la qualité perçue, en revanche, l'absence d'effet est établie (3,95 contre 3,95, test d'équivalence).</p>
+            <p className="text-sm mt-1">Afficher « 245 € barré » au lieu de 195 € ne produit <strong>ni gain significatif d'intention ({s.tests.intent}), ni gain d'image ({s.tests.quality})</strong>. Le groupe B affiche 12 % d'intention positive contre 8 % pour A : l'écart n'est pas significatif, mais il n'est pas strictement nul. Pour la qualité perçue, en revanche, l'absence d'effet est établie (3,95 contre 3,95, test d'équivalence).</p>
           </ChartPanel>
           <ChartPanel title="Qualité perçue, A contre B" sub="Score moyen sur 5 (moyenne des 5 items)">
             <ABChart field="qualityAB" what="qualité perçue moyenne par groupe (A et B)" max={5} fmt={(v) => fmtN(v, 2)} unit=" / 5" />
             <div className="text-sm flex flex-col gap-2 mt-1">
               <p>Pour tester H1 sur la valeur perçue, nous avons comparé le score de qualité perçue (moyenne des 5 items, α = 0,86) entre les deux versions.</p>
               <p>Les scores sont identiques : 3,95 en A et 3,95 en B (test t de Welch, t(99,1) = 0,02, p = 0,99, d = 0,00 ; IC à 95 % de l'écart : −0,18 à +0,18). Un test d'équivalence montre que l'effet éventuel de la promotion est inférieur à d = 0,4 (p = 0,018).</p>
-              <p>L'engagement des répondants ne modère pas cet effet (p = 0,83). Afficher une promotion n'améliore donc pas l'image de qualité de la veste, mais ne la dégrade pas non plus. <strong>H1 est rejetée pour la valeur perçue.</strong></p>
+              <p>L'engagement des répondants ne modère pas cet effet (p = 0,83). Afficher une promotion n'améliore donc pas l'image de qualité de la veste, mais ne la dégrade pas non plus.</p>
             </div>
           </ChartPanel>
         </div>
       </Section>
 
-      <details className="panel p-5 text-base">
-        <summary className="font-semibold text-lg cursor-pointer">Méthodologie détaillée</summary>
-        <dl className="grid sm:grid-cols-[260px_1fr] gap-x-4 gap-y-3 mt-4">
-          {s.detail.map(([k, v]) => <React.Fragment key={k}><dt className="text-muted">{k}</dt><dd>{v}</dd></React.Fragment>)}
-        </dl>
-      </details>
 
       <p className="text-base max-w-prose"><strong>Limites.</strong> Échantillon jeune et étudiant (âge médian 22 ans) ; intentions déclarées, et non achats réels ; effet de la saison non testé.</p>
 
@@ -1499,7 +1497,7 @@ function TabSynthese({ go }) {
         <Section eyebrow="Argument clients" title="Les clients ne réagissent pas significativement à la promotion">
           <div className="reco items-center">
             <span className="reco-ic"><L.ClipboardList size={18} /></span>
-            <p className="flex-1 text-sm">La qualité de la veste est reconnue, mais c'est le prix qui freine l'achat : les répondants acceptent plutôt 100 à 130 €. Le prix barré a bien été perçu (manipulation check, p &lt; 0,001), mais il ne produit ni gain significatif d'intention (p = 0,29) ni gain d'image (p = 0,99).</p>
+            <p className="flex-1 text-sm">La qualité de la veste est reconnue, mais c'est le prix qui freine l'achat : les répondants acceptent plutôt {SURVEY.kpi.zoneLo} à {SURVEY.kpi.zoneHi} €. Le prix barré a bien été perçu (manipulation check, p &lt; 0,001), mais il ne produit ni gain significatif d'intention (p = 0,29) ni gain d'image (p = 0,99).</p>
             <button className="btn ghost" onClick={() => go("questionnaire")}>Voir le Questionnaire →</button>
           </div>
         </Section>

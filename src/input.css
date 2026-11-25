@@ -320,3 +320,7 @@ input[type="range"] { width: 100%; accent-color: var(--ocre); height: 24px; }
 .robust-note { display: flex; gap: 8px; padding: 12px 14px; border-radius: 10px; font-size: .9rem; background: color-mix(in srgb, var(--forest) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--forest) 30%, var(--line)); color: var(--ink); }
 .robust-note svg { color: var(--forest); }
 .season-row.is-promo { display: block; font-size: .85rem; line-height: 1.45; }
+
+/* Questionnaire : légende explicite du graphique Van Westendorp */
+.vw-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--ink); }
+.vw-legend span { display: inline-flex; align-items: center; gap: 6px; }
